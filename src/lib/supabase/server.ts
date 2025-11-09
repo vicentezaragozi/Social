@@ -5,8 +5,8 @@ import { env } from "@/lib/env";
 
 import type { Database } from "./types";
 
-export const getSupabaseServerClient = () => {
-  const cookieStore = cookies();
+export const getSupabaseServerClient = async () => {
+  const cookieStore = await cookies();
 
   const mutableCookies = cookieStore as unknown as {
     set?: (

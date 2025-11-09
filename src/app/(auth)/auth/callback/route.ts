@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const next = redirectTo ?? "/onboarding";
 
   if (code) {
-    const supabase = getSupabaseServerClient();
+    const supabase = await getSupabaseServerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       console.error("Supabase exchangeCodeForSession error", error);

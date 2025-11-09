@@ -23,7 +23,7 @@ export async function signInWithEmail(
     return { error: "Please enter an email address." };
   }
 
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
@@ -41,13 +41,13 @@ export async function signInWithEmail(
 }
 
 export async function signOutAction() {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   await supabase.auth.signOut();
   redirect("/sign-in");
 }
 
 export async function requireAuthSession() {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();

@@ -4,9 +4,10 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 
 export const getCurrentProfile = async () => {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -29,10 +30,8 @@ export const getCurrentProfile = async () => {
   return data;
 };
 
-type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
-
-export const upsertProfile = async (payload: ProfileInsert) => {
-  const supabase = getSupabaseServerClient();
+export const upsertProfile = async (payload: Partial<ProfileInsert>) => {
+  const supabase = await getSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -41,11 +40,15 @@ export const upsertProfile = async (payload: ProfileInsert) => {
     return { error: "Not authenticated." };
   }
 
+  if (!payload.display_name || payload.display_name.trim().length === 0) {
+    return { error: "Display name is required." };
+  }
+
   const insertPayload: ProfileInsert = {
     id: user.id,
     display_name: payload.display_name,
-    age: payload.age,
-    id_photo_url: payload.id_photo_url,
+    age: payload.age ?? null,
+    id_photo_url: payload.id_photo_url ?? null,
     avatar_url: payload.avatar_url ?? null,
     bio: payload.bio ?? null,
     is_private: payload.is_private ?? false,

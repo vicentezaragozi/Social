@@ -4,6 +4,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 import { env } from "@/lib/env";
+import { PWAProvider } from "@/components/pwa/pwa-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Social",
   },
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({
@@ -41,7 +42,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground antialiased`}
       >
-        {children}
+        <PWAProvider>{children}</PWAProvider>
       </body>
     </html>
   );

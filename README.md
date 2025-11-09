@@ -53,12 +53,10 @@ src/
   app/            // Next.js App Router routes and layouts
   lib/            // Environment parsing, Supabase helpers, utilities
   components/     // UI building blocks (auth, onboarding, etc.)
-public/           // Static assets and PWA icons (in progress)
+public/           // Static assets, icons, service worker
 supabase/
   migrations/     // SQL schema and policy definitions
 ```
-
-Upcoming tasks will introduce the Supabase schema, guest flows, admin dashboard, and the full PWA configuration.
 
 ## Supabase Setup
 
@@ -86,3 +84,15 @@ with check (
 ```
 
 4. Populate the `venues` table with at least one venue and grant staff/admin access via `venue_memberships` so they can see the dashboard.
+
+## Progressive Web App
+
+- The installable manifest lives in `src/app/manifest.ts` and the custom service worker in `public/sw.js`.
+- Icons are under `public/icons/`; replace them with venue-branded PNG/SVG assets before launch.
+- The `PWAProvider` automatically registers the service worker and surfaces an install banner when `beforeinstallprompt` fires.
+- To test the install flow:
+  1. Run `npm run dev`
+  2. Open Chrome DevTools → Lighthouse → PWA to verify installability
+  3. Trigger “Add to Home Screen” on mobile (or the Chrome install menu on desktop)
+
+Avoid running the app over `http` in production; enable HTTPS (or `vercel dev --https`) so the service worker can register.

@@ -45,7 +45,7 @@ export async function completeOnboarding(
     return { error: "ID photo must be under 5 MB." };
   }
 
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   const {
     data: { user },
     error: userError,

@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 export default async function ProfilePage() {
-  const session = await requireAuthSession();
+  const { user } = await requireAuthSession();
   const profile = await getCurrentProfile();
 
   if (!profile) {
@@ -34,11 +34,16 @@ export default async function ProfilePage() {
       </header>
 
       <ProfileForm
-        email={session.user.email ?? ""}
+        email={user.email ?? ""}
         defaultValues={{
           display_name: profile.display_name,
+          phone_number: profile.phone_number,
           bio: profile.bio,
           is_private: profile.is_private,
+          avatar_url: profile.avatar_url,
+          highlight_tags: profile.highlight_tags ?? [],
+          gallery_urls: profile.gallery_urls ?? [],
+          favorite_track_url: profile.favorite_track_url,
         }}
       />
     </main>

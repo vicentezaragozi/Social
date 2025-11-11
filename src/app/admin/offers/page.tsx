@@ -1,14 +1,27 @@
-import { requireAdminVenue } from "@/lib/supabase/admin";
+import { redirect } from "next/navigation";
+
+import { getAdminMemberships } from "@/lib/supabase/admin";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 import { toggleOfferStatus } from "@/app/admin/offers/actions";
+import { AdminShell } from "@/components/admin/admin-shell";
 
 export default async function AdminOffersPage({
   searchParams,
 }: {
   searchParams: { venue?: string };
 }) {
-  const { venue } = await requireAdminVenue(searchParams.venue);
+  const params = searchParams;
+  const { memberships, user } = await getAdminMemberships();
+  const activeMembership = params.venue
+    ? memberships.find((entry) => entry.venue_id === params.venue)
+    : memberships[0];
+
+  if (!activeMembership) {
+    redirect("/sign-in/admin?error=venue_access");
+  }
+
+  const venue = activeMembership.venues;
   const supabase = await getSupabaseServerClient();
 
   const { data: offers } = await supabase
@@ -21,6 +34,7 @@ export default async function AdminOffersPage({
     .order("start_at", { ascending: false });
 
   return (
+    <AdminShell userEmail={user.email ?? ""} venues={memberships.map((entry) => entry.venues)}>
     <main className="space-y-6">
       <header>
         <h1 className="text-xl font-semibold text-white">Offers</h1>
@@ -93,6 +107,7 @@ export default async function AdminOffersPage({
         ) : null}
       </div>
     </main>
+    </AdminShell>
   );
 }
 

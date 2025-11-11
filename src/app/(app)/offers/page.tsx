@@ -30,16 +30,17 @@ export default async function OffersPage() {
     []) as Database["public"]["Tables"]["offers"]["Row"][];
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-4 pb-32 pt-10 text-white">
-      <header className="mb-6 space-y-2">
-        <p className="text-xs uppercase tracking-[0.35em] text-[var(--muted)]">
-          Tonight&apos;s specials
-        </p>
-        <h1 className="text-2xl font-semibold">{venue.name} Offers</h1>
-        <p className="text-sm text-[var(--muted)]">
-          From VIP tables to late-night bites, unlock the perks curated by the venue team.
-        </p>
-      </header>
+    <main className="mobile-safe min-h-screen bg-[var(--background)] text-white">
+      <div className="px-4 pb-32 pt-10">
+        <header className="mb-6 space-y-2">
+          <p className="text-xs uppercase tracking-[0.35em] text-[var(--muted)]">
+            Tonight&apos;s specials
+          </p>
+          <h1 className="text-2xl font-semibold">{venue.name} Offers</h1>
+          <p className="text-sm text-[var(--muted)]">
+            From VIP tables to late-night bites, unlock the perks curated by the venue team.
+          </p>
+        </header>
 
       {offers && offers.length > 0 ? (
         <ul className="space-y-4">
@@ -86,6 +87,7 @@ export default async function OffersPage() {
           No active offers right now. Check back later tonight.
         </div>
       )}
+      </div>
     </main>
   );
 }

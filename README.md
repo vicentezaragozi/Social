@@ -83,7 +83,7 @@ with check (
 );
 ```
 
-4. Populate the `venues` table with at least one venue and grant staff/admin access via `venue_memberships` so they can see the dashboard.
+4. Populate the `venues` table with at least one venue and grant staff/admin access via `venue_memberships` so they can see the dashboard. If you are configuring an existing project via the Supabase dashboard instead of the CLI, follow `docs/supabase-manual-setup.md` for the exact SQL snippets.
 
 ## Progressive Web App
 

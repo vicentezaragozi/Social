@@ -44,16 +44,91 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  overscroll-behavior: contain;
+}
+
 body {
   min-height: 100vh;
+  max-width: 100vw;
+  overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   letter-spacing: 0.01em;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
+    env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  overscroll-behavior: contain;
 }
 
 ::selection {
   background: color-mix(in srgb, var(--accent) 74%, transparent);
   color: var(--foreground);
+}
+
+.mobile-safe {
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0) + 72px);
+}
+
+@keyframes glowFloat {
+  0% {
+    transform: translate3d(-4%, -4%, 0) scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate3d(6%, 4%, 0) scale(1.12);
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate3d(-4%, -4%, 0) scale(1);
+    opacity: 0.45;
+  }
+}
+
+@keyframes glowDrift {
+  0% {
+    transform: translate3d(2%, 6%, 0) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(-4%, -6%, 0) scale(1.08);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate3d(2%, 6%, 0) scale(1);
+    opacity: 0.35;
+  }
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translate3d(0, -120%, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 120%, 0) rotate(960deg);
+    opacity: 0;
+  }
+}
+
+.confetti-piece {
+  animation-name: confettiFall;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.grid-auto-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
 }

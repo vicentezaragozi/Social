@@ -28,13 +28,21 @@ export const getSupabaseServerClient = async () => {
           value: string,
           options?: Record<string, unknown>,
         ) => {
-          mutableCookies.set?.(name, value, options);
+          try {
+            mutableCookies.set?.(name, value, options);
+          } catch {
+            // Ignore; Next.js only allows cookie mutation within Server Actions.
+          }
         },
         remove: (
           name: string,
           options?: Record<string, unknown>,
         ) => {
-          mutableCookies.delete?.(name, options);
+          try {
+            mutableCookies.delete?.(name, options);
+          } catch {
+            // Ignore; Next.js only allows cookie mutation within Server Actions.
+          }
         },
       },
     },

@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
 import { cn } from "@/lib/utils";
+import { SocialWordmark } from "@/components/brand/social-wordmark";
 
 type Venue = {
   id: string;
@@ -17,6 +18,7 @@ const navItems = [
   { href: "/admin/users", label: "Guests" },
   { href: "/admin/requests", label: "Song Queue" },
   { href: "/admin/offers", label: "Offers" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
 export function AdminShell({
@@ -41,22 +43,31 @@ export function AdminShell({
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-white">
-      <header className="border-b border-[#1d2946] bg-[var(--surface)]/80 px-6 py-4 backdrop-blur">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-[var(--muted)]">Admin</p>
-            <h1 className="text-xl font-semibold">Venue Dashboard</h1>
+      <header className="border-b border-[#1d2946] bg-[var(--surface)]/80 px-6 py-5 backdrop-blur">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <SocialWordmark className="tracking-[0.6em]" />
+            <div className="border-l border-[#1d2946] pl-4">
+              <p className="text-xs uppercase tracking-[0.35em] text-[var(--muted)]">Admin</p>
+              <h1 className="text-xl font-semibold">Venue Dashboard</h1>
+            </div>
           </div>
-          <div className="text-right text-xs text-[var(--muted)]">
-            <p>{userEmail}</p>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--muted)] sm:justify-end">
+            <span>{userEmail}</span>
             {venues.length ? (
-              <p>
+              <span>
                 Venue:{" "}
                 <span className="text-white">
                   {venues.find((venue) => venue.id === activeVenueId)?.name ?? venues[0].name}
                 </span>
-              </p>
+              </span>
             ) : null}
+            <Link
+              href="/sign-out"
+              className="inline-flex items-center gap-2 rounded-full border border-[#223253] px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white transition hover:border-white"
+            >
+              Sign out
+            </Link>
           </div>
         </div>
         <nav className="mt-4 flex flex-wrap gap-2 text-sm text-[var(--muted)]">

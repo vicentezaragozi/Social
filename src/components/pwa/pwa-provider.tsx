@@ -88,13 +88,46 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
 function InstallBanner() {
   const { isInstallable, install, dismiss, hasInstalled } = usePWA();
+  const [collapsed, setCollapsed] = useState(false);
 
-  if (!isInstallable || hasInstalled) {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem("social:pwa-banner-collapsed");
+    setCollapsed(stored === "1");
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (collapsed) {
+      window.localStorage.setItem("social:pwa-banner-collapsed", "1");
+    } else {
+      window.localStorage.removeItem("social:pwa-banner-collapsed");
+    }
+  }, [collapsed]);
+
+  if (hasInstalled) {
+    return null;
+  }
+
+  if (collapsed) {
+    return (
+      <button
+        type="button"
+        className="fixed bottom-[calc(80px+env(safe-area-inset-bottom,0))] left-6 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-[#223253] bg-[#0d162a] text-2xl text-white shadow-[0_12px_30px_-18px_rgba(0,0,0,0.65)] transition hover:border-[#2f9b7a] hover:scale-110 md:bottom-6"
+        onClick={() => setCollapsed(false)}
+        aria-label="Show install prompt"
+      >
+        📱
+      </button>
+    );
+  }
+
+  if (!isInstallable) {
     return null;
   }
 
   return (
-    <div className="fixed inset-x-4 bottom-24 z-50 rounded-3xl border border-[#223253] bg-[#0d162a] px-6 py-4 shadow-xl shadow-black/40 backdrop-blur-sm md:right-auto md:left-auto md:bottom-6 md:max-w-md">
+    <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom,0))] left-6 z-50 w-[min(90vw,320px)] rounded-3xl border border-[#223253] bg-[#0d162a] px-6 py-5 shadow-xl shadow-black/40 backdrop-blur-sm md:bottom-6">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#223253] bg-[#101b33] text-xl">
           📱
@@ -102,15 +135,25 @@ function InstallBanner() {
         <div className="flex-1 space-y-1 text-sm text-white">
           <p className="font-semibold">Add Social to your home screen</p>
           <p className="text-xs text-[var(--muted)]">
-            Install the web app for full-screen access and quicker re-entry into the venue.
+            Install the app for full-screen access and quicker re-entry into the venue.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setCollapsed(true)}
+          className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#223253] text-sm text-[var(--muted)] transition hover:text-white"
+          aria-label="Minimize install prompt"
+        >
+          –
+        </button>
       </div>
       <div className="mt-4 flex items-center justify-end gap-2 text-xs">
         <button
           type="button"
           className="rounded-xl border border-[#223253] px-3 py-1 uppercase tracking-[0.2em] text-[var(--muted)] transition hover:text-white"
-          onClick={dismiss}
+          onClick={() => {
+            setCollapsed(true);
+          }}
         >
           Later
         </button>

@@ -1,7 +1,11 @@
-import { cache } from "react";
+import { cache, Suspense } from "react";
+import { redirect } from "next/navigation";
 
 import { requireAdminVenue } from "@/lib/supabase/admin";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getAdminMemberships } from "@/lib/supabase/admin";
+import { AdminShell } from "@/components/admin/admin-shell";
+import { AttendanceChart } from "@/components/admin/attendance-chart";
 
 const toStartOfDayIso = (date = new Date()) => {
   const start = new Date(date);
@@ -22,14 +26,39 @@ const getVenueSessionIds = cache(async (venueId: string) => {
 export default async function AdminDashboard({
   searchParams,
 }: {
-  searchParams: { venue?: string };
+  searchParams: Promise<{ venue?: string }>;
 }) {
-  const targetVenueId = searchParams.venue;
-  const { venue } = await requireAdminVenue(targetVenueId);
+  const { venue: venueParam } = await searchParams;
+  const { venue, user } = await requireAdminVenue(venueParam);
   const supabase = await getSupabaseServerClient();
+  
+  // Check if onboarding is complete
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, avatar_url")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const { data: sessionMeta } = await supabase
+    .from("session_metadata")
+    .select("id")
+    .eq("venue_id", venue.id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  // Redirect to onboarding if not complete
+  if (!profile?.display_name || !profile?.avatar_url || !sessionMeta) {
+    redirect("/sign-in/admin/onboarding");
+  }
+
+  // Get admin memberships for shell
+  const { memberships, user: adminUser } = await getAdminMemberships();
+
   const startOfDay = toStartOfDayIso();
-  // eslint-disable-next-line react-hooks/purity
-  const twelveHoursAgoIso = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const sevenDaysAgoIso = sevenDaysAgo.toISOString();
 
   const [attendanceRes, songRequestRes, newCustomersRes, sessionsRes, matchesDetailRes] =
     await Promise.all([
@@ -52,7 +81,7 @@ export default async function AdminDashboard({
         .from("venue_sessions")
         .select("entered_at")
         .eq("venue_id", venue.id)
-        .gte("entered_at", twelveHoursAgoIso),
+        .gte("entered_at", sevenDaysAgoIso),
       supabase
         .from("matches")
         .select("id, created_at, interaction:interaction_id(venue_session_id)")
@@ -71,26 +100,58 @@ export default async function AdminDashboard({
   const songsRequestedToday = songRequestRes.count ?? 0;
   const newCustomersToday = newCustomersRes.count ?? 0;
 
-  const peakHourData = (sessionsRes.data ?? []).reduce<Record<string, number>>(
-    (acc, row) => {
-      const entered = new Date(row.entered_at);
-      const hourKey = entered
+  const attendanceEvents = (sessionsRes.data ?? [])
+    .map((row) => {
+      const time = new Date(row.entered_at).getTime();
+      return Number.isNaN(time) ? null : time;
+    })
+    .filter((time): time is number => time !== null);
+
+  const buildHourlySeries = (hours: number) => {
+    const series: { label: string; value: number }[] = [];
+    for (let i = hours; i >= 1; i -= 1) {
+      const bucketStart = new Date(now.getTime() - i * 60 * 60 * 1000);
+      const bucketEnd = new Date(bucketStart.getTime() + 60 * 60 * 1000);
+      const count = attendanceEvents.filter(
+        (timestamp) => timestamp >= bucketStart.getTime() && timestamp < bucketEnd.getTime(),
+      ).length;
+      const label = bucketStart
         .toLocaleTimeString("en-US", {
           hour: "numeric",
           hour12: true,
         })
         .toUpperCase();
-      acc[hourKey] = (acc[hourKey] ?? 0) + 1;
-      return acc;
-    },
-    {},
-  );
+      series.push({ label, value: count });
+    }
+    return series;
+  };
 
-  const peakHourEntries = Object.entries(peakHourData).slice(-8);
-  const peakMax = Math.max(...peakHourEntries.map(([, value]) => value), 1);
+  const buildDailySeries = (days: number) => {
+    const series: { label: string; value: number }[] = [];
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    for (let i = days - 1; i >= 0; i -= 1) {
+      const bucketStart = new Date(startOfToday.getTime() - i * 24 * 60 * 60 * 1000);
+      const bucketEnd = new Date(bucketStart.getTime() + 24 * 60 * 60 * 1000);
+      const count = attendanceEvents.filter(
+        (timestamp) => timestamp >= bucketStart.getTime() && timestamp < bucketEnd.getTime(),
+      ).length;
+      const label = bucketStart.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+      series.push({ label, value: count });
+    }
+    return series;
+  };
+
+  const attendanceSeriesByRange = {
+    "12h": buildHourlySeries(12),
+    "24h": buildHourlySeries(24),
+    "7d": buildDailySeries(7),
+  };
 
   return (
-    <div className="space-y-6">
+    <AdminShell userEmail={adminUser?.email ?? ""} venues={memberships.map((entry) => entry.venues)}>
+      <Suspense fallback={<div className="p-6 text-[var(--muted)]">Loading dashboard…</div>}>
+        <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-4">
         <DashboardCard title="Current attendance" value={attendance} />
         <DashboardCard title="Matches today" value={matchesToday} />
@@ -98,29 +159,10 @@ export default async function AdminDashboard({
         <DashboardCard title="New customers" value={newCustomersToday} />
       </section>
 
-      <section className="rounded-3xl border border-[#223253] bg-[#0d162a] p-6 shadow-lg shadow-black/25">
-        <h2 className="text-lg font-semibold text-white">Peak hours (last 12h)</h2>
-        {peakHourEntries.length ? (
-          <div className="mt-6 flex h-48 items-end gap-3">
-            {peakHourEntries.map(([hour, count]) => (
-              <div key={hour} className="flex flex-1 flex-col items-center">
-                <div
-                  className="w-full rounded-t-2xl bg-[var(--accent)] transition"
-                  style={{
-                    height: `${(count / peakMax) * 100}%`,
-                  }}
-                />
-                <span className="mt-2 text-xs text-[var(--muted)]">{hour}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-4 text-sm text-[var(--muted)]">
-            No session data in the last 12 hours.
-          </p>
-        )}
-      </section>
-    </div>
+      <AttendanceChart seriesByRange={attendanceSeriesByRange} />
+        </div>
+      </Suspense>
+    </AdminShell>
   );
 }
 

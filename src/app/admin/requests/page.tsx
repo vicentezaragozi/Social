@@ -1,16 +1,29 @@
 import Link from "next/link";
 
-import { requireAdminVenue } from "@/lib/supabase/admin";
+import { redirect } from "next/navigation";
+
+import { getAdminMemberships } from "@/lib/supabase/admin";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 import { updateSongRequestStatus } from "@/app/admin/requests/actions";
+import { AdminShell } from "@/components/admin/admin-shell";
 
 export default async function AdminSongRequests({
   searchParams,
 }: {
-  searchParams: { venue?: string };
+  searchParams: Promise<{ venue?: string }>;
 }) {
-  const { venue } = await requireAdminVenue(searchParams.venue);
+  const params = await searchParams;
+  const { memberships, user } = await getAdminMemberships();
+  const activeMembership = params.venue
+    ? memberships.find((entry) => entry.venue_id === params.venue)
+    : memberships[0];
+
+  if (!activeMembership) {
+    redirect("/sign-in/admin?error=venue_access");
+  }
+
+  const venue = activeMembership.venues;
   const supabase = await getSupabaseServerClient();
 
   const { data: requests } = await supabase
@@ -23,6 +36,7 @@ export default async function AdminSongRequests({
     .limit(200);
 
   return (
+    <AdminShell userEmail={user.email ?? ""} venues={memberships.map((entry) => entry.venues)}>
     <main className="space-y-6">
       <header>
         <h1 className="text-xl font-semibold text-white">Song request queue</h1>
@@ -81,21 +95,25 @@ export default async function AdminSongRequests({
                         Open chat
                       </Link>
                     ) : null}
-                    <form
-                      action={async (formData) => {
-                        await updateSongRequestStatus({ success: false }, formData);
-                      }}
-                    >
-                      <input type="hidden" name="venueId" value={venue.id} />
-                      <input type="hidden" name="requestId" value={request.id} />
-                      <input type="hidden" name="status" value="completed" />
-                      <button className="rounded-xl border border-[#2f9b7a] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5]">
-                        Mark played
-                      </button>
-                    </form>
+                    {request.status !== "completed" ? (
+                      <form
+                        action={async (formData) => {
+                          "use server";
+                          await updateSongRequestStatus({ success: false }, formData);
+                        }}
+                      >
+                        <input type="hidden" name="venueId" value={venue.id} />
+                        <input type="hidden" name="requestId" value={request.id} />
+                        <input type="hidden" name="status" value="completed" />
+                        <button className="rounded-xl border border-[#2f9b7a] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5]">
+                          Mark played
+                        </button>
+                      </form>
+                    ) : null}
                     {request.status !== "cancelled" ? (
                       <form
                         action={async (formData) => {
+                          "use server";
                           await updateSongRequestStatus({ success: false }, formData);
                         }}
                       >
@@ -115,6 +133,7 @@ export default async function AdminSongRequests({
         </table>
       </div>
     </main>
+    </AdminShell>
   );
 }
 

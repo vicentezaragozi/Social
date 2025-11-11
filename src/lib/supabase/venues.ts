@@ -6,24 +6,20 @@ type VenueRow = Database["public"]["Tables"]["venues"]["Row"];
 
 export const getDefaultVenue = async (): Promise<VenueRow> => {
   const supabase = await getSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("venues")
-    .select("*")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle<VenueRow>();
 
-  if (error) {
-    console.error("Failed to load default venue", error);
+  const { data: rpcData, error: rpcError } = await supabase.rpc("get_default_venue");
+
+  if (rpcError) {
+    console.error("Failed to load default venue via RPC", rpcError);
     throw new Error("Unable to load venue data.");
   }
 
-  if (!data) {
+  if (!rpcData) {
     throw new Error(
       "No venues configured. Add at least one venue row in Supabase to continue.",
     );
   }
 
-  return data;
+  return rpcData as VenueRow;
 };
 

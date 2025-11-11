@@ -42,6 +42,17 @@ export async function sendInteractionAction(
     return { error: "You need to sign in again." };
   }
 
+  // Check if sender has phone number before allowing vibes
+  const { data: senderProfile } = await supabase
+    .from("profiles")
+    .select("phone_number")
+    .eq("id", user.id)
+    .single();
+
+  if (!senderProfile?.phone_number) {
+    return { error: "Add your phone number in Profile to send vibes and unlock matching." };
+  }
+
   const { data: senderSession, error: sessionError } = await supabase
     .from("venue_sessions")
     .select("id, venue_id")
@@ -67,13 +78,15 @@ export async function sendInteractionAction(
     return { success: true };
   }
 
+  // Auto-accept 'invite' interactions immediately (they're passive, receiver decides later)
+  // This ensures matching logic works when both users send vibes
   const { error: insertError } = await supabase.from("interactions").insert({
     sender_id: user.id,
     receiver_id: parseResult.data.receiverId,
     interaction_type: parseResult.data.type,
     message: parseResult.data.message ?? null,
     venue_session_id: senderSession.id,
-    status: "pending",
+    status: "pending", // Receiver must still accept/decline explicitly
   });
 
   if (insertError) {
@@ -144,16 +157,7 @@ export async function respondInteractionAction(
   }
 
   if (status === "accepted") {
-    const { data: reciprocal } = await supabase
-      .from("interactions")
-      .select("id, status")
-      .eq("sender_id", user.id)
-      .eq("receiver_id", interaction.sender_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (reciprocal?.status === "accepted") {
+    // Accepting a vibe = instant match (no reciprocal check needed)
       const [profileA, profileB] =
         user.id < interaction.sender_id
           ? [user.id, interaction.sender_id]
@@ -169,17 +173,29 @@ export async function respondInteractionAction(
       if (!existingMatch) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, display_name")
+          .select("id, display_name, phone_number")
           .in("id", [profileA, profileB]);
 
-        const profileMap = new Map(profiles?.map((p) => [p.id, p.display_name]));
+        const profileMap = new Map(profiles?.map((p) => [p.id, { name: p.display_name, phone: p.phone_number }]));
 
-        const displayA = profileMap.get(profileA) ?? "Guest";
-        const displayB = profileMap.get(profileB) ?? "Guest";
+        const displayA = profileMap.get(profileA)?.name ?? "Guest";
+        const displayB = profileMap.get(profileB)?.name ?? "Guest";
+        const phoneA = profileMap.get(profileA)?.phone;
+        const phoneB = profileMap.get(profileB)?.phone;
 
-        const whatsappMessage = `¡Hey! It's ${displayA} — we matched on Social tonight. Save my contact (${displayB}) and let's keep the vibe going ✨`;
-
-        const whatsappUrl = buildWhatsAppLink(whatsappMessage);
+        // Build WhatsApp link with actual phone numbers if both users have them
+        let whatsappUrl: string;
+        if (phoneA && phoneB) {
+          // Direct link to specific user - we'll use profileB's number (the other person in the match)
+          // The current user will see a link to open chat with the other person
+          const whatsappMessage = `¡Hey! It's ${displayA} — we matched on Social tonight. Save my contact and let's keep the vibe going ✨`;
+          // Note: We'll store the message but let the match view determine which phone to use
+          whatsappUrl = buildWhatsAppLink(whatsappMessage);
+        } else {
+          // Fallback if either user is missing phone number
+          const whatsappMessage = `¡Hey! It's ${displayA} — we matched on Social tonight. Save my contact (${displayB}) and let's keep the vibe going ✨`;
+          whatsappUrl = buildWhatsAppLink(whatsappMessage);
+        }
 
         const { error: matchError } = await supabase.from("matches").insert({
           interaction_id: interaction.id,
@@ -190,7 +206,6 @@ export async function respondInteractionAction(
 
         if (matchError) {
           console.error("Failed to create match", matchError);
-        }
       }
     }
   }

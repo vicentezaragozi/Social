@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 
 import { signInWithEmail, type SignInState } from "@/lib/supabase/auth";
 import { cn } from "@/lib/utils";
@@ -28,11 +29,13 @@ function SubmitButton({ className }: { className?: string }) {
   );
 }
 
-export function SignInForm() {
-  const [state, formAction] = useFormState(signInWithEmail, initialState);
+export function SignInForm({ venueId }: { venueId?: string }) {
+  const [state, formAction] = useActionState(signInWithEmail, initialState);
 
   return (
     <form action={formAction} className="space-y-6">
+      {venueId && <input type="hidden" name="venueId" value={venueId} />}
+      
       <div className="space-y-2">
         <label
           htmlFor="email"

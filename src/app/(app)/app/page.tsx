@@ -7,26 +7,59 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getDefaultVenue } from "@/lib/supabase/venues";
 
 import { ConnectFeed } from "@/components/connect/connect-feed";
-
+import { TutorialModal } from "@/components/onboarding/tutorial-modal";
 export const metadata = {
   title: "Connect",
 };
 
 export default async function ConnectPage() {
-  const session = await requireAuthSession();
+  const { user } = await requireAuthSession();
   const profile = await getCurrentProfile();
 
   if (!profile) {
     redirect("/onboarding");
   }
 
-  const venue = await getDefaultVenue();
-  const activeSession = await ensureActiveVenueSession({
-    venueId: venue.id,
-    profileId: profile.id,
-  });
-
   const supabase = await getSupabaseServerClient();
+
+  // Check if user is admin
+  const { data: adminCred } = await supabase
+    .from("admin_credentials")
+    .select("profile_id")
+    .eq("profile_id", user.id)
+    .maybeSingle();
+
+  const venue = await getDefaultVenue();
+  const profileId = profile.id;
+
+  if (!profileId || profileId === "null") {
+    throw new Error("Profile ID missing. Complete onboarding again or contact support.");
+  }
+
+  let activeSession;
+  try {
+    activeSession = await ensureActiveVenueSession({
+    venueId: venue.id,
+    profileId,
+  });
+  } catch (error) {
+    console.warn("Redirecting to landing because session is inactive", error);
+    redirect("/?error=session_inactive");
+  }
+
+  // Fetch blocked users to filter them out
+  const { data: blockedUsers } = await supabase
+    .from("blocks")
+    .select("blocked_id")
+    .eq("blocker_id", profileId);
+
+  const blockedIds = new Set(blockedUsers?.map((b) => b.blocked_id) ?? []);
+
+  // Fetch admin visibility preferences for this venue
+  const { data: venueMembers } = await supabase
+    .from("venue_memberships")
+    .select("user_id")
+    .eq("venue_id", venue.id);
 
   const [attendeesRes, outgoingRes, incomingRes, matchesRes] = await Promise.all([
     supabase
@@ -36,28 +69,30 @@ export default async function ConnectPage() {
       )
       .eq("venue_id", venue.id)
       .eq("status", "active")
-      .is("exited_at", null)
-      .neq("profile_id", profile.id),
+      .is("exited_at", null),
     supabase
       .from("interactions")
       .select(
-        "id, venue_session_id, sender_id, receiver_id, interaction_type, status, message, created_at, responded_at",
+        "id, venue_session_id, sender_id, receiver_id, interaction_type, status, message, created_at, responded_at, receiver:profiles!interactions_receiver_id_fkey(id, display_name, avatar_url, bio, is_private)",
       )
-      .eq("sender_id", profile.id),
+      .eq("sender_id", profileId),
     supabase
       .from("interactions")
       .select(
-        "id, venue_session_id, sender_id, receiver_id, interaction_type, status, message, created_at, responded_at",
+        "id, venue_session_id, sender_id, receiver_id, interaction_type, status, message, created_at, responded_at, sender:profiles!interactions_sender_id_fkey(id, display_name, avatar_url, bio, is_private)",
       )
-      .eq("receiver_id", profile.id),
+      .eq("receiver_id", profileId),
     supabase
       .from("matches")
-      .select("id, interaction_id, profile_a, profile_b, whatsapp_url, created_at")
-      .or(`profile_a.eq.${profile.id},profile_b.eq.${profile.id}`),
+      .select(
+        "id, interaction_id, profile_a, profile_b, whatsapp_url, created_at, profiles:profiles!matches_profile_a_fkey(id, display_name, avatar_url, bio, is_private), profiles_b:profiles!matches_profile_b_fkey(id, display_name, avatar_url, bio, is_private)",
+      )
+      .or(`profile_a.eq.${profileId},profile_b.eq.${profileId}`)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (attendeesRes.error) {
-    console.error("Failed to load attendees", attendeesRes.error);
+    console.error("Failed to load attendees", JSON.stringify(attendeesRes.error, null, 2));
   }
   if (outgoingRes.error) {
     console.error("Failed to load outgoing interactions", outgoingRes.error);
@@ -69,30 +104,100 @@ export default async function ConnectPage() {
     console.error("Failed to load matches", matchesRes.error);
   }
 
-  const attendees = attendeesRes.data ?? [];
-  const outgoing = outgoingRes.data ?? [];
-  const incoming = incomingRes.data ?? [];
-  const matches = matchesRes.data ?? [];
+  // Filter out blocked users and private guests from attendees
+  let attendees = (attendeesRes.data ?? []).filter(
+    (session) =>
+      session.profile_id !== profileId &&
+      !blockedIds.has(session.profile_id) &&
+      !session.profiles?.is_private,
+  );
+
+  const dedupeByProfile = <T extends { profile_id: string }>(records: T[]) => {
+    const seen = new Set<string>();
+    return records.filter((record) => {
+      if (seen.has(record.profile_id)) {
+        return false;
+      }
+      seen.add(record.profile_id);
+      return true;
+    });
+  };
+
+  attendees = dedupeByProfile(attendees);
+
+  // Add admin profiles as pseudo-attendees if they want to appear in the feed
+  if (venueMembers && venueMembers.length > 0) {
+    // Fetch full profiles for admin users
+    const adminUserIds = venueMembers
+      .map((member) => member.user_id)
+      .filter((id) => id !== profileId && !blockedIds.has(id) && !attendees.some((a) => a.profile_id === id));
+
+    if (adminUserIds.length > 0) {
+      const { data: adminProfiles } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", adminUserIds);
+
+      if (adminProfiles) {
+        const adminSessions = adminProfiles.map((profile) => ({
+          id: `admin-${profile.id}`, // Pseudo session ID
+          profile_id: profile.id,
+          venue_id: venue.id,
+          status: "active" as const,
+          entered_at: new Date().toISOString(),
+          exited_at: null,
+          device_fingerprint: null,
+          created_at: new Date().toISOString(),
+          profiles: profile,
+          is_venue_host: true, // Flag to identify admin
+        }));
+
+        attendees = dedupeByProfile([...attendees, ...adminSessions]);
+      }
+    }
+  }
+
+  const isVisibleProfile = (_profileIdToCheck: string, profileRecord?: { is_private?: boolean | null }) =>
+    !profileRecord?.is_private;
+
+  const outgoing = (outgoingRes.data ?? []).filter((interaction) =>
+    isVisibleProfile(interaction.receiver_id, interaction.receiver as { is_private?: boolean | null } | undefined),
+  );
+  const incoming = (incomingRes.data ?? []).filter((interaction) =>
+    isVisibleProfile(interaction.sender_id, interaction.sender as { is_private?: boolean | null } | undefined),
+  );
+  const matches = (matchesRes.data ?? []).filter((match) => {
+    const partner =
+      match.profile_a === profileId
+        ? (match.profiles_b as { id: string | null; is_private?: boolean | null } | null)
+        : (match.profiles as { id: string | null; is_private?: boolean | null } | null);
+    if (!partner?.id) return true;
+    return isVisibleProfile(partner.id, partner);
+  });
 
   return (
+    <>
+      <TutorialModal />
     <ConnectFeed
       currentProfile={{
-        id: profile.id,
+        id: profileId,
         displayName: profile.display_name,
         avatarUrl: profile.avatar_url,
         bio: profile.bio,
+        isPrivate: profile.is_private,
       }}
       venue={{
         id: venue.id,
         name: venue.name,
       }}
-      activeSessionId={activeSession.id}
+      activeSessionId={activeSession?.id ?? ""}
       attendees={attendees}
-      outgoingInteractions={outgoing}
-      incomingInteractions={incoming}
-      matches={matches}
-      sessionEmail={session.user.email ?? ""}
+      outgoingInteractions={outgoing as any}
+      incomingInteractions={incoming as any}
+      matches={matches as any}
+      sessionEmail={user.email ?? ""}
     />
+    </>
   );
 }
 

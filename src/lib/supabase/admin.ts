@@ -22,7 +22,7 @@ export const getAdminMemberships = async () => {
   const { data: memberships, error } = await supabase
     .from("venue_memberships")
     .select(
-      "id, role, venue_id, created_at, venues:venue_id(id, name, slug, location, timezone, created_at)",
+      "id, role, venue_id, show_in_guest_feed, created_at, venues:venue_id(id, name, slug, location, timezone, created_at)",
     )
     .eq("user_id", user.id);
 

@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const codeVerifier = requestUrl.searchParams.get("code_verifier");
   const redirectTo = requestUrl.searchParams.get("redirect_to");
   const next = redirectTo ?? "/onboarding";
 

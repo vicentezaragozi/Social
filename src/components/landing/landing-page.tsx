@@ -22,7 +22,7 @@ type LandingPageProps = {
 export function LandingPage({ venues }: LandingPageProps) {
   const router = useRouter();
   const [selectedVenue, setSelectedVenue] = useState<string>("");
-  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [showQrInstructions, setShowQrInstructions] = useState(false);
 
   const handleContinue = () => {
     if (!selectedVenue) return;
@@ -34,7 +34,39 @@ export function LandingPage({ venues }: LandingPageProps) {
   const selectedVenueData = venues.find((v) => v.id === selectedVenue);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-white">
+    <>
+      {showQrInstructions ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 py-6">
+          <div className="absolute right-6 top-6">
+            <button
+              type="button"
+              onClick={() => setShowQrInstructions(false)}
+              className="rounded-full border border-white/30 bg-black/60 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black/80"
+            >
+              Close
+            </button>
+          </div>
+          <div className="w-full max-w-md space-y-6 rounded-3xl border border-white/10 bg-[#0a1024]/95 p-8 text-center shadow-2xl shadow-black/40">
+            <SocialWordmark className="justify-center text-white" />
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-white">Scan with your phone</h2>
+              <p className="text-sm text-[var(--muted)]">
+                Use your phone&apos;s camera or any QR scanner app to scan the code displayed at the venue. The link will open Social and take you straight to the correct sign-in page.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-dashed border-white/20 bg-[#101b33] px-4 py-6 text-sm text-[var(--muted)]">
+              <p className="font-semibold text-white">Quick tips</p>
+              <ul className="mt-3 space-y-2 text-left text-xs text-white/70">
+                <li>• Turn up screen brightness on shared displays for faster scans.</li>
+                <li>• If the link opens in a browser, follow the prompts to sign in.</li>
+                <li>• Need help? Ask venue staff to guide you.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="min-h-screen bg-[var(--background)] text-white">
       {/* Header */}
       <header className="border-b border-white/5 bg-[rgba(10,16,36,0.9)] px-6 py-6 backdrop-blur-lg">
         <div className="mx-auto max-w-2xl">
@@ -133,44 +165,20 @@ export function LandingPage({ venues }: LandingPageProps) {
 
           {/* QR Code Scanner Section */}
           <div className="rounded-3xl border border-[#223253] bg-[#0d162a] p-8 shadow-lg shadow-black/25">
-            <div className="space-y-4">
-              <div className="text-center">
-                <h2 className="text-xl font-semibold mb-2">Have a QR Code?</h2>
-                <p className="text-sm text-[var(--muted)]">
-                  Scan the QR code at your venue to join instantly
-                </p>
-              </div>
-
-              {!showQRScanner ? (
-                <button
-                  onClick={() => setShowQRScanner(true)}
-                  className="w-full rounded-2xl border border-[#223253] bg-[#101b33] px-6 py-4 text-center text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:border-[var(--accent)] hover:bg-[#0d162a]"
-                >
-                  Open QR Scanner
-                </button>
-              ) : (
-                <div className="space-y-4">
-                  <div className="aspect-square w-full rounded-2xl border-2 border-dashed border-[var(--accent)] bg-[#101b33] p-8">
-                    <div className="flex h-full flex-col items-center justify-center space-y-4">
-                      <svg className="h-24 w-24 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                      </svg>
-                      <p className="text-center text-sm text-[var(--muted)]">
-                        QR scanner will be implemented here
-                      </p>
-                      <p className="text-xs text-[var(--muted)]">
-                        For now, use the venue selector above
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowQRScanner(false)}
-                    className="w-full rounded-2xl border border-[#5c2a40] bg-[#301321] px-6 py-3 text-center text-sm font-semibold uppercase tracking-[0.2em] text-[#ff8ba7] transition hover:border-[#ff8ba7]"
-                  >
-                    Close Scanner
-                  </button>
-                </div>
-              )}
+            <div className="space-y-4 text-center">
+              <h2 className="mb-2 text-xl font-semibold">Have a QR Code?</h2>
+              <p className="text-sm text-[var(--muted)]">
+                Tap below to learn how to scan the QR code at your venue
+              </p>
+              <button
+                onClick={() => setShowQrInstructions(true)}
+                className="w-full rounded-2xl border border-[#223253] bg-[#101b33] px-6 py-4 text-center text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:border-[var(--accent)] hover:bg-[#0d162a]"
+              >
+                Scan QR Instructions
+              </button>
+              <p className="text-xs text-[var(--muted)]">
+                Most phones open the correct page automatically when the QR is scanned.
+              </p>
             </div>
           </div>
 
@@ -186,6 +194,7 @@ export function LandingPage({ venues }: LandingPageProps) {
         </div>
       </main>
     </div>
+    </>
   );
 }
 

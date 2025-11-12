@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
@@ -14,10 +14,13 @@ import {
   type VenueSettingsState,
 } from "@/app/admin/settings/actions";
 import { MAX_GALLERY_ITEMS } from "@/components/admin/settings/constants";
+import { SocialWordmark } from "@/components/brand/social-wordmark";
+import { toDataURL } from "qrcode";
 
 type VenueDetails = {
   id: string;
   name: string;
+  slug: string;
   description: string | null;
   address: string | null;
   capacity: number | null;
@@ -122,6 +125,11 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
     {},
   );
   const [gallery, setGallery] = useState<string[]>(venue.gallery_urls ?? []);
+  const [signInUrl, setSignInUrl] = useState<string>("");
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [qrError, setQrError] = useState<string | null>(null);
+  const [isGeneratingQr, setIsGeneratingQr] = useState(false);
+  const [showFullscreenQr, setShowFullscreenQr] = useState(false);
 
   useEffect(() => {
     if (state.success) {
@@ -129,18 +137,124 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
     }
   }, [state.success]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || !venue.id) {
+      setSignInUrl("");
+      return;
+    }
+
+    setSignInUrl(`${window.location.origin}/sign-in?venue=${venue.id}`);
+  }, [venue.id]);
+
+  useEffect(() => {
+    setQrDataUrl(null);
+    setShowFullscreenQr(false);
+    setQrError(null);
+  }, [signInUrl]);
+
   const amenitiesValue = useMemo(
     () => (venue.amenities ?? []).join(", "),
     [venue.amenities],
   );
+
+  const generateQr = useCallback(async (): Promise<string | null> => {
+    if (!signInUrl) {
+      setQrError("Venue link is unavailable. Save venue details and refresh the page.");
+      return null;
+    }
+
+    setIsGeneratingQr(true);
+    setQrError(null);
+
+    try {
+      const dataUrl = await toDataURL(signInUrl, {
+        margin: 2,
+        width: 600,
+        color: {
+          dark: "#0a1024",
+          light: "#ffffff",
+        },
+      });
+      setQrDataUrl(dataUrl);
+      return dataUrl;
+    } catch (error) {
+      console.error("Failed to generate QR code", error);
+      setQrError("Unable to generate the QR code. Please try again.");
+      return null;
+    } finally {
+      setIsGeneratingQr(false);
+    }
+  }, [signInUrl]);
+
+  const handleDownloadQr = useCallback(() => {
+    if (!qrDataUrl) return;
+    const downloadLink = document.createElement("a");
+    downloadLink.href = qrDataUrl;
+    downloadLink.download = `social-${venue.slug || venue.id}-qr.png`;
+    downloadLink.rel = "noopener";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  }, [qrDataUrl, venue.id, venue.slug]);
+
+  const handleDisplayFullscreen = useCallback(async () => {
+    if (!qrDataUrl) {
+      const generated = await generateQr();
+      if (!generated) {
+        return;
+      }
+    }
+
+    setShowFullscreenQr(true);
+  }, [generateQr, qrDataUrl]);
+
+  const handleCloseFullscreen = useCallback(() => {
+    setShowFullscreenQr(false);
+  }, []);
 
   const handleRemoveGallery = (url: string) => {
     setGallery((prev) => prev.filter((entry) => entry !== url));
   };
 
   return (
-    <div className="space-y-6 rounded-3xl border border-[#1f2c49] bg-[#0d162a]/80 p-8 shadow-lg shadow-black/30">
-      <div>
+    <>
+      {showFullscreenQr && qrDataUrl ? (
+        <div className="fixed inset-0 z-50 flex min-h-screen w-screen items-center justify-center bg-black/90 px-4 py-6">
+          <div className="absolute right-6 top-6">
+            <button
+              type="button"
+              onClick={handleCloseFullscreen}
+              className="rounded-full border border-white/30 bg-black/40 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black/60"
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="w-full max-w-3xl space-y-6 rounded-3xl border border-white/10 bg-[#0a1024]/95 p-10 text-center shadow-2xl shadow-black/40">
+            <SocialWordmark className="justify-center text-white" />
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold text-white">Scan to join {venue.name}</h2>
+              <p className="text-sm text-[var(--muted)]">
+                Point your camera at the QR code below to open Social and jump straight into {venue.name}.
+              </p>
+            </div>
+            <div className="mx-auto flex h-72 w-72 items-center justify-center rounded-3xl border border-white/20 bg-white p-6">
+              <img src={qrDataUrl} alt={`QR code for ${venue.name}`} className="h-full w-full object-contain" />
+            </div>
+            {signInUrl ? (
+              <p className="text-xs text-white/60">
+                Or visit{" "}
+                <span className="break-all font-semibold text-white">
+                  {signInUrl}
+                </span>
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="space-y-6 rounded-3xl border border-[#1f2c49] bg-[#0d162a]/80 p-8 shadow-lg shadow-black/30">
+        <div>
         <h2 className="text-2xl font-semibold text-white">Venue customization</h2>
         <p className="mt-2 text-sm text-[var(--muted)]">
           Update guest-facing details, upload gallery shots, and manage your contact info.
@@ -328,7 +442,70 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
           <FormSubmitButton label="Save venue settings" />
         </div>
       </form>
-    </div>
+        <div className="space-y-4 rounded-2xl border border-[#1a3a5a] bg-[#0f1f33] p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Venue QR code</h3>
+              <p className="text-xs text-[var(--muted)]">
+                Generate a QR code guests can scan to open your venue&apos;s sign-in page instantly.
+              </p>
+            </div>
+          <button
+              type="button"
+              onClick={() => {
+                void generateQr();
+              }}
+            disabled={isGeneratingQr || !signInUrl}
+              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#6b9eff] to-[#4a7fd9] px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isGeneratingQr ? "Generating…" : qrDataUrl ? "Regenerate QR" : "Generate QR"}
+            </button>
+          </div>
+          {qrError ? <ErrorNotice message={qrError} /> : null}
+          <div className="flex flex-col gap-6 lg:flex-row">
+            <div className="flex items-center justify-center rounded-3xl border border-dashed border-white/15 bg-[#101b33] p-6 lg:w-72">
+              {qrDataUrl ? (
+                <img
+                  src={qrDataUrl}
+                  alt={`QR code preview for ${venue.name}`}
+                  className="h-56 w-56 rounded-2xl bg-white p-4 object-contain"
+                />
+              ) : (
+                <div className="text-center text-xs text-[var(--muted)]">
+                  Generate a QR code to preview it here.
+                </div>
+              )}
+            </div>
+            <div className="flex flex-1 flex-col gap-3">
+              <button
+                type="button"
+                onClick={handleDownloadQr}
+                disabled={!qrDataUrl}
+                className="inline-flex items-center justify-center rounded-2xl border border-[#1f2c49] bg-[#0a1024] px-5 py-3 text-sm font-semibold text-white transition hover:border-[#345088] hover:bg-[#101c36] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Download QR code
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void handleDisplayFullscreen();
+                }}
+                disabled={(!qrDataUrl && !signInUrl) || isGeneratingQr}
+                className="inline-flex items-center justify-center rounded-2xl bg-[#1a2a48] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#24365f] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Display QR in full screen
+              </button>
+              <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-xs text-[var(--muted)]">
+                <p className="font-semibold text-white/80">Sign-in link</p>
+                <p className="mt-1 break-all">
+                  {signInUrl || "Unavailable — refresh after saving venue settings."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

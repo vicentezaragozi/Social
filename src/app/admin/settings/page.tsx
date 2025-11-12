@@ -8,6 +8,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 type VenueRow = {
   id: string;
   name: string;
+  slug: string;
   description: string | null;
   address: string | null;
   capacity: number | null;
@@ -54,6 +55,7 @@ export default async function AdminSettingsPage({
       [
         "id",
         "name",
+        "slug",
         "description",
         "address",
         "capacity",
@@ -76,6 +78,7 @@ export default async function AdminSettingsPage({
         [
           "id",
           "name",
+        "slug",
           "description",
           "address",
           "capacity",
@@ -169,6 +172,7 @@ export default async function AdminSettingsPage({
   const effectiveVenue: VenueRow = venueRow ?? {
     id: venue.id,
     name: venue.name,
+    slug: venue.slug ?? "",
     description: null,
     address: null,
     capacity: null,

@@ -248,8 +248,8 @@ export default async function ConnectPage() {
       incomingInteractions={incoming as any}
       matches={matches as any}
       sessionEmail={user.email ?? ""}
-      offers={offers}
-      offerRedemptions={savedOffers}
+      offers={[]}
+      offerRedemptions={[]}
     />
     </>
   );

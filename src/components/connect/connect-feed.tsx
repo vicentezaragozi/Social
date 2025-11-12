@@ -36,7 +36,7 @@ type MatchRow =
   };
 type OfferRow = Database["public"]["Tables"]["offers"]["Row"];
 type OfferRedemptionRow = Database["public"]["Tables"]["offer_redemptions"]["Row"];
-type OfferRedemptionSummary = Pick<
+export type OfferRedemptionSummary = Pick<
   OfferRedemptionRow,
   "offer_id" | "promo_code" | "status" | "accepted_at" | "redeemed_at"
 >;
@@ -771,15 +771,21 @@ function CardMedia({
   );
 }
 
-function OffersPanel({
+export function OffersPanel({
   offers,
   redemptions,
   onOfferAccepted,
 }: {
   offers: OfferRow[];
   redemptions: Map<string, OfferRedemptionSummary>;
-  onOfferAccepted: (offerId: string, promoCode?: string | null, alreadyAccepted?: boolean) => void;
+  onOfferAccepted?: (offerId: string, promoCode?: string | null, alreadyAccepted?: boolean) => void;
 }) {
+  const handleAccept =
+    onOfferAccepted ??
+    (() => {
+      /* noop */
+    });
+
   if (!offers.length) return null;
 
   return (
@@ -797,7 +803,7 @@ function OffersPanel({
             key={offer.id}
             offer={offer}
             redemption={redemptions.get(offer.id)}
-            onOfferAccepted={onOfferAccepted}
+            onOfferAccepted={handleAccept}
           />
         ))}
       </div>

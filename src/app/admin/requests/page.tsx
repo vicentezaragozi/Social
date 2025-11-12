@@ -96,19 +96,19 @@ export default async function AdminSongRequests({
                       </Link>
                     ) : null}
                     {request.status !== "completed" ? (
-                      <form
-                        action={async (formData) => {
+                    <form
+                      action={async (formData) => {
                           "use server";
-                          await updateSongRequestStatus({ success: false }, formData);
-                        }}
-                      >
-                        <input type="hidden" name="venueId" value={venue.id} />
-                        <input type="hidden" name="requestId" value={request.id} />
-                        <input type="hidden" name="status" value="completed" />
-                        <button className="rounded-xl border border-[#2f9b7a] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5]">
-                          Mark played
-                        </button>
-                      </form>
+                        await updateSongRequestStatus({ success: false }, formData);
+                      }}
+                    >
+                      <input type="hidden" name="venueId" value={venue.id} />
+                      <input type="hidden" name="requestId" value={request.id} />
+                      <input type="hidden" name="status" value="completed" />
+                      <button className="rounded-xl border border-[#2f9b7a] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5]">
+                        Mark played
+                      </button>
+                    </form>
                     ) : null}
                     {request.status !== "cancelled" ? (
                       <form

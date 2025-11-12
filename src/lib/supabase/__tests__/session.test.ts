@@ -12,6 +12,8 @@ const buildSession = (overrides: Partial<SessionRow> = {}): SessionRow => ({
   session_description: null,
   session_type: "event",
   duration_hours: 1,
+  entry_fee_cents: null,
+  entry_fee_currency: null,
   start_time: new Date().toISOString(),
   end_time: null,
   is_active: true,

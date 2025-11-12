@@ -2,10 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { requireAuthSession } from "@/lib/supabase/auth";
+import { getCurrentProfile, getProfileBlockStatus } from "@/lib/supabase/profile";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getDefaultVenue } from "@/lib/supabase/venues";
 
 import type { Database } from "@/lib/supabase/types";
+import { BlockedNotice } from "@/components/app/blocked-notice";
 
 export const metadata = {
   title: "Offers",
@@ -13,6 +15,12 @@ export const metadata = {
 
 export default async function OffersPage() {
   await requireAuthSession();
+  const profile = await getCurrentProfile();
+  const { isBlocked } = getProfileBlockStatus(profile);
+  if (profile && isBlocked) {
+    return <BlockedNotice profile={profile} />;
+  }
+
   const venue = await getDefaultVenue();
 
   const supabase = await getSupabaseServerClient();
@@ -68,17 +76,66 @@ export default async function OffersPage() {
                 <div className="flex-1 space-y-2">
                   <h2 className="text-lg font-semibold text-white">{offer.title}</h2>
                   <p className="text-sm text-[var(--muted)]">{offer.description}</p>
+                  <div className="text-xs text-[var(--muted)]">
+                    <span>
+                      Starts {new Date(offer.start_at ?? new Date().toISOString()).toLocaleString()}
+                    </span>
+                    {offer.end_at ? (
+                      <>
+                        {" "}
+                        · <span>Ends {new Date(offer.end_at).toLocaleString()}</span>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
               </div>
+              {offer.promo_code ? (
+                <div className="rounded-2xl border border-[#2f9b7a]/40 bg-[#122521] px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5]">
+                  Promo code: <span className="text-white">{offer.promo_code}</span>
+                </div>
+              ) : null}
               {offer.cta_url ? (
                 <Link
                   href={offer.cta_url}
                   target="_blank"
-                  className="inline-flex w-full items-center justify-center rounded-2xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.25em] text-white transition hover:bg-[var(--accent-strong)]"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.25em] text-white transition hover:bg-[var(--accent-strong)]"
                 >
-                  {offer.cta_label ?? "Claim offer"}
+                  <span>{offer.cta_label ?? "Claim offer"}</span>
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M11.25 4.375h4.375V8.75"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M4.375 15.625l11.25-11.25"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M15.625 11.25v4.375H11.25"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </Link>
-              ) : null}
+              ) : (
+                <p className="text-xs text-[var(--muted)]">
+                  Ask staff to redeem this offer at checkout.
+                </p>
+              )}
             </li>
           ))}
         </ul>

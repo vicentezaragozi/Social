@@ -97,6 +97,19 @@ export const ensureActiveVenueSession = async (params: {
 }) => {
   const supabase = await getSupabaseServerClient();
 
+  const { data: profileRecord } = await supabase
+    .from("profiles")
+    .select("blocked_until")
+    .eq("id", params.profileId)
+    .maybeSingle();
+
+  if (profileRecord?.blocked_until) {
+    const until = new Date(profileRecord.blocked_until);
+    if (!Number.isNaN(until.getTime()) && until.getTime() > Date.now()) {
+      throw new Error("profile_blocked");
+    }
+  }
+
   const metadata = await getActiveSessionMetadataWithClient(supabase, params.venueId);
 
   if (!metadata) {

@@ -58,7 +58,8 @@ export async function updateGuestStatus(
         break;
       case "permanent":
       default:
-        blockedUntil = null;
+        now.setFullYear(now.getFullYear() + 100);
+        blockedUntil = now.toISOString();
     }
   }
 
@@ -66,13 +67,26 @@ export async function updateGuestStatus(
     .from("profiles")
     .update({
       blocked_until: action === "unblock" ? null : blockedUntil,
-      blocked_reason: action === "unblock" ? null : reason ?? null,
+      blocked_reason:
+        action === "unblock"
+          ? null
+          : (reason?.trim()?.length ? reason.trim() : "Blocked by venue staff"),
     })
     .eq("id", profileId);
 
   if (error) {
     console.error("Failed to update guest status", error);
     return { error: "Could not update guest status. Try again." };
+  }
+
+  if (action === "block") {
+    const exitTime = new Date().toISOString();
+    await supabase
+      .from("venue_sessions")
+      .update({ status: "inactive", exited_at: exitTime })
+      .eq("profile_id", profileId)
+      .eq("venue_id", venueId)
+      .eq("status", "active");
   }
 
   revalidatePath("/admin/users");

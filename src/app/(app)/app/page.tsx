@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
 
 import { requireAuthSession } from "@/lib/supabase/auth";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getCurrentProfile, getProfileBlockStatus } from "@/lib/supabase/profile";
 import { ensureActiveVenueSession } from "@/lib/supabase/session";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getDefaultVenue } from "@/lib/supabase/venues";
 
 import { ConnectFeed } from "@/components/connect/connect-feed";
+import { BlockedNotice } from "@/components/app/blocked-notice";
 import { TutorialModal } from "@/components/onboarding/tutorial-modal";
 export const metadata = {
   title: "Connect",
@@ -18,6 +19,12 @@ export default async function ConnectPage() {
 
   if (!profile) {
     redirect("/onboarding");
+  }
+
+  const { isBlocked } = getProfileBlockStatus(profile);
+
+  if (isBlocked) {
+    return <BlockedNotice profile={profile} />;
   }
 
   const supabase = await getSupabaseServerClient();
@@ -61,7 +68,10 @@ export default async function ConnectPage() {
     .select("user_id")
     .eq("venue_id", venue.id);
 
-  const [attendeesRes, outgoingRes, incomingRes, matchesRes] = await Promise.all([
+  const nowIso = new Date().toISOString();
+
+  const [attendeesRes, outgoingRes, incomingRes, matchesRes, offersRes, savedOffersRes] =
+    await Promise.all([
     supabase
       .from("venue_sessions")
       .select(
@@ -89,6 +99,21 @@ export default async function ConnectPage() {
       )
       .or(`profile_a.eq.${profileId},profile_b.eq.${profileId}`)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("offers")
+      .select(
+        "id, venue_id, title, description, cta_label, cta_url, image_url, promo_code, priority, start_at, end_at, is_active, created_at, updated_at",
+      )
+      .eq("venue_id", venue.id)
+      .eq("is_active", true)
+      .lte("start_at", nowIso)
+      .or(`end_at.is.null,end_at.gt.${nowIso}`)
+      .order("priority", { ascending: false })
+      .order("start_at", { ascending: false }),
+    supabase
+      .from("offer_redemptions")
+      .select("id, offer_id, promo_code, status, accepted_at, redeemed_at")
+      .eq("profile_id", profileId),
   ]);
 
   if (attendeesRes.error) {
@@ -103,13 +128,28 @@ export default async function ConnectPage() {
   if (matchesRes.error) {
     console.error("Failed to load matches", matchesRes.error);
   }
+  if (offersRes.error) {
+    console.error("Failed to load offers", offersRes.error);
+  }
+  if (savedOffersRes.error) {
+    console.error("Failed to load saved offers", savedOffersRes.error);
+  }
+
+  const isProfileBlocked = (profileRecord?: { blocked_until?: string | null }) => {
+    if (!profileRecord?.blocked_until) {
+      return false;
+    }
+    const until = new Date(profileRecord.blocked_until);
+    return !Number.isNaN(until.getTime()) && until.getTime() > Date.now();
+  };
 
   // Filter out blocked users and private guests from attendees
   let attendees = (attendeesRes.data ?? []).filter(
     (session) =>
       session.profile_id !== profileId &&
       !blockedIds.has(session.profile_id) &&
-      !session.profiles?.is_private,
+      !session.profiles?.is_private &&
+      !isProfileBlocked(session.profiles ?? undefined),
   );
 
   const dedupeByProfile = <T extends { profile_id: string }>(records: T[]) => {
@@ -139,32 +179,42 @@ export default async function ConnectPage() {
         .in("id", adminUserIds);
 
       if (adminProfiles) {
-        const adminSessions = adminProfiles.map((profile) => ({
-          id: `admin-${profile.id}`, // Pseudo session ID
-          profile_id: profile.id,
-          venue_id: venue.id,
-          status: "active" as const,
-          entered_at: new Date().toISOString(),
-          exited_at: null,
-          device_fingerprint: null,
-          created_at: new Date().toISOString(),
-          profiles: profile,
-          is_venue_host: true, // Flag to identify admin
-        }));
+        const adminSessions = adminProfiles
+          .filter((profile) => !isProfileBlocked(profile ?? undefined))
+          .map((profile) => ({
+            id: `admin-${profile.id}`, // Pseudo session ID
+            profile_id: profile.id,
+            venue_id: venue.id,
+            status: "active" as const,
+            entered_at: new Date().toISOString(),
+            exited_at: null,
+            device_fingerprint: null,
+            created_at: new Date().toISOString(),
+            profiles: profile,
+            is_venue_host: true, // Flag to identify admin
+          }));
 
         attendees = dedupeByProfile([...attendees, ...adminSessions]);
       }
     }
   }
 
-  const isVisibleProfile = (_profileIdToCheck: string, profileRecord?: { is_private?: boolean | null }) =>
-    !profileRecord?.is_private;
+  const isVisibleProfile = (
+    _profileIdToCheck: string,
+    profileRecord?: { is_private?: boolean | null },
+  ) => !profileRecord?.is_private;
 
   const outgoing = (outgoingRes.data ?? []).filter((interaction) =>
-    isVisibleProfile(interaction.receiver_id, interaction.receiver as { is_private?: boolean | null } | undefined),
+    isVisibleProfile(
+      interaction.receiver_id,
+      interaction.receiver as { is_private?: boolean | null } | undefined,
+    ),
   );
   const incoming = (incomingRes.data ?? []).filter((interaction) =>
-    isVisibleProfile(interaction.sender_id, interaction.sender as { is_private?: boolean | null } | undefined),
+    isVisibleProfile(
+      interaction.sender_id,
+      interaction.sender as { is_private?: boolean | null } | undefined,
+    ),
   );
   const matches = (matchesRes.data ?? []).filter((match) => {
     const partner =
@@ -174,6 +224,8 @@ export default async function ConnectPage() {
     if (!partner?.id) return true;
     return isVisibleProfile(partner.id, partner);
   });
+  const offers = offersRes.data ?? [];
+  const savedOffers = savedOffersRes.data ?? [];
 
   return (
     <>
@@ -196,6 +248,8 @@ export default async function ConnectPage() {
       incomingInteractions={incoming as any}
       matches={matches as any}
       sessionEmail={user.email ?? ""}
+      offers={offers}
+      offerRedemptions={savedOffers}
     />
     </>
   );

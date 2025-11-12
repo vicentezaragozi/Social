@@ -96,3 +96,21 @@ with check (
   3. Trigger “Add to Home Screen” on mobile (or the Chrome install menu on desktop)
 
 Avoid running the app over `http` in production; enable HTTPS (or `vercel dev --https`) so the service worker can register.
+
+## Offers Feature
+
+- **Admin experience**: Staff manage offers from `/admin/offers`, with fields for scheduling (start/end), promo codes, priority ordering, call-to-action links, and hero imagery. Each edit revalidates the admin and guest surfaces.
+- **Guest experience**: Active offers appear at the top of `/app`. Guests tap “Save offer” to log a redemption and receive an in-app toast confirmation that surfaces any promo code tied to the offer.
+- **Redemption tracking**: Every save inserts into `offer_redemptions`. Admins see the latest five saves per offer and can mark them as redeemed, which timestamps `redeemed_at` for downstream reporting.
+- **Notifications**: This MVP relies on real-time toasts within the guest app plus inline success banners in the admin UI—no email/SMS is dispatched.
+- **Testing strategy**:
+  - **Manual flow**: create an offer, verify appearance in `/app`, save it as a guest (confirm toast + promo code), then mark it redeemed in `/admin/offers`.
+  - **Future unit coverage**: stub Supabase client to exercise `saveOfferAction`, `deleteOfferAction`, and `acceptOfferAction` validation branches (start/end windows, duplicate saves).
+  - **Integration**: when E2E harness is available, script a scenario that seeds an offer, performs a guest save, and asserts redemption state in the admin dashboard.
+
+## Admin Blocking
+
+- **Staff controls**: The Guests tab now supports timed blocks (1h / 24h / 7d / permanent) plus an optional reason. Blocking a guest clears their active venue sessions immediately.
+- **Guest experience**: Blocked users are redirected to a dedicated notice across all `/app` tabs showing the reason and unblock time. They cannot browse the deck, send vibes, or submit song requests until the block expires or is removed.
+- **Visibility**: Blocked guests are removed from the connect deck and active attendee list, but existing vibes/matches remain accessible. Other guests see a “Blocked” badge beside those users within Matches so they can still respond appropriately.
+- **Enforcement**: `ensureActiveVenueSession` refuses new sessions while a profile is blocked, keeping attendance data clean and preventing re-entry during the block window.

@@ -20,7 +20,10 @@ import type { Database } from "@/lib/supabase/types";
 
 type InteractionRow = Database["public"]["Tables"]["interactions"]["Row"];
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
-type SlimProfile = Pick<ProfileRow, "id" | "display_name" | "avatar_url" | "bio" | "gallery_urls" | "phone_number">;
+type SlimProfile = Pick<
+  ProfileRow,
+  "id" | "display_name" | "avatar_url" | "bio" | "gallery_urls" | "phone_number" | "blocked_until" | "blocked_reason"
+>;
 
 type MatchRow =
   Database["public"]["Tables"]["matches"]["Row"] & {
@@ -38,6 +41,21 @@ type MatchesViewProps = {
 
 const respondInitialState: InteractionActionState = {};
 const matchActionInitialState: MatchActionState = {};
+
+const isProfileBlocked = (profile?: { blocked_until?: string | null } | null) => {
+  if (!profile?.blocked_until) return false;
+  const until = new Date(profile.blocked_until);
+  return !Number.isNaN(until.getTime()) && until.getTime() > Date.now();
+};
+
+const BlockedBadge = ({ profile }: { profile: SlimProfile | null }) => {
+  if (!profile || !isProfileBlocked(profile)) return null;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-[#553432] bg-[#301321] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ff8ba7]">
+      Blocked
+    </span>
+  );
+};
 
 function MatchActionsMenu({
   matchId,
@@ -323,9 +341,10 @@ export function MatchesView(props: MatchesViewProps) {
                         <Avatar src={guest.avatar_url} alt={guest.display_name} galleryUrls={guest.gallery_urls ?? []} />
                       <div>
                         <p className="text-sm font-semibold">{guest.display_name}</p>
-                        <p className="text-xs text-[var(--muted)]">
-                            Sent you a vibe
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-[var(--muted)]">Sent you a vibe</p>
+                          <BlockedBadge profile={guest} />
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -385,7 +404,10 @@ export function MatchesView(props: MatchesViewProps) {
                     <div className="flex items-center gap-3">
                           <Avatar src={partner.avatar_url} alt={partner.display_name} galleryUrls={partner.gallery_urls ?? []} />
                           <div className="space-y-1">
-                            <p className="text-sm font-semibold text-white">{partner.display_name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-semibold text-white">{partner.display_name}</p>
+                              <BlockedBadge profile={partner} />
+                            </div>
                             <p className="text-xs text-[var(--muted)]">Matched {matchTimestamp}</p>
                           </div>
                       </div>
@@ -437,9 +459,12 @@ export function MatchesView(props: MatchesViewProps) {
                       <Avatar src={guest.avatar_url} alt={guest.display_name} galleryUrls={guest.gallery_urls ?? []} />
                       <div className="flex-1">
                         <p className="text-sm font-semibold text-white">{guest.display_name}</p>
-                        <p className="text-xs text-[var(--muted)]">
-                          Vibe {interaction.status === "accepted" ? "accepted ✨" : "sent"}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-[var(--muted)]">
+                            Vibe {interaction.status === "accepted" ? "accepted ✨" : "sent"}
+                          </p>
+                          <BlockedBadge profile={guest} />
+                        </div>
                       </div>
                       {interaction.status === "accepted" && (
                         <span className="rounded-full bg-[var(--accent)]/10 px-3 py-1 text-xs font-semibold text-[var(--accent)]">

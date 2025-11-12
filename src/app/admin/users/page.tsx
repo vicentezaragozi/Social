@@ -12,9 +12,9 @@ import { AdminShell } from "@/components/admin/admin-shell";
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: { venue?: string };
+  searchParams: Promise<{ venue?: string }>;
 }) {
-  const params = searchParams;
+  const params = await searchParams;
   const { memberships, user } = await getAdminMemberships();
   const activeMembership = params.venue
     ? memberships.find((entry) => entry.venue_id === params.venue)

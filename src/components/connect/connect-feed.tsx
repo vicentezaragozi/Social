@@ -6,7 +6,12 @@ import { useActionState, useCallback, useEffect, useMemo, useRef, useState } fro
 import type { TouchEvent } from "react";
 import { useFormStatus } from "react-dom";
 
-import { sendInteractionAction, type InteractionActionState } from "@/app/(app)/app/actions";
+import {
+  acceptOfferAction,
+  sendInteractionAction,
+  type AcceptOfferState,
+  type InteractionActionState,
+} from "@/app/(app)/app/actions";
 import { cn } from "@/lib/utils";
 
 import type { Database } from "@/lib/supabase/types";
@@ -29,6 +34,12 @@ type MatchRow =
     profiles: ProfileRow | null;
     profiles_b: ProfileRow | null;
   };
+type OfferRow = Database["public"]["Tables"]["offers"]["Row"];
+type OfferRedemptionRow = Database["public"]["Tables"]["offer_redemptions"]["Row"];
+type OfferRedemptionSummary = Pick<
+  OfferRedemptionRow,
+  "offer_id" | "promo_code" | "status" | "accepted_at" | "redeemed_at"
+>;
 type EnrichedMatch = MatchRow & {
   partner: ProfileRow | null;
 };
@@ -57,6 +68,8 @@ type ConnectFeedProps = {
   incomingInteractions: IncomingInteraction[];
   matches: MatchRow[];
   sessionEmail: string;
+  offers: OfferRow[];
+  offerRedemptions: OfferRedemptionSummary[];
 };
 
 type ConnectCard = {
@@ -87,6 +100,7 @@ type InteractionButtonProps = {
 };
 
 const interactionInitialState: InteractionActionState = {};
+const acceptInitialState: AcceptOfferState = {};
 type ToastMessage = {
   id: string;
   title: string;
@@ -149,6 +163,21 @@ export function ConnectFeed(props: ConnectFeedProps) {
     return set;
   }, [matchesWithPartner, props.currentProfile.id]);
 
+  const initialOfferRedemptions = useMemo(() => {
+    return new Map<string, OfferRedemptionSummary>(
+      props.offerRedemptions.map((redemption) => [
+        redemption.offer_id,
+        redemption,
+      ]),
+    );
+  }, [props.offerRedemptions]);
+
+  const [offerRedemptions, setOfferRedemptions] = useState(initialOfferRedemptions);
+
+  useEffect(() => {
+    setOfferRedemptions(initialOfferRedemptions);
+  }, [initialOfferRedemptions]);
+
   const cards = useMemo<ConnectCard[]>(() => {
     return props.attendees
       .map((session) => {
@@ -199,6 +228,31 @@ export function ConnectFeed(props: ConnectFeedProps) {
       window.setTimeout(() => removeToast(id), 6000);
     },
     [removeToast],
+  );
+
+  const handleOfferAccepted = useCallback(
+    (offerId: string, promoCode?: string | null, alreadyAccepted?: boolean) => {
+      setOfferRedemptions((prev) => {
+        const next = new Map(prev);
+        const existing = next.get(offerId);
+        next.set(offerId, {
+          offer_id: offerId,
+          promo_code: promoCode ?? existing?.promo_code ?? null,
+          status: existing?.status ?? "accepted",
+          accepted_at: existing?.accepted_at ?? new Date().toISOString(),
+          redeemed_at: existing?.redeemed_at ?? null,
+        });
+        return next;
+      });
+      addToast({
+        variant: "invite",
+        title: alreadyAccepted ? "Offer already saved" : "Offer saved",
+        description: promoCode
+          ? `Show this code at the venue: ${promoCode}`
+          : "Saved to your offers list.",
+      });
+    },
+    [addToast],
   );
   const [showFirstVisitTooltip, setShowFirstVisitTooltip] = useState(false);
   const [celebrationMatch, setCelebrationMatch] = useState<EnrichedMatch | null>(null);
@@ -383,6 +437,11 @@ export function ConnectFeed(props: ConnectFeedProps) {
         attendees={cards}
         sessionEmail={props.sessionEmail}
       />
+        <OffersPanel
+          offers={props.offers}
+          redemptions={offerRedemptions}
+          onOfferAccepted={handleOfferAccepted}
+        />
 
         {hydrated ? (
           cards.length ? (
@@ -709,6 +768,145 @@ function CardMedia({
       onError={() => setImageError(true)}
       unoptimized
     />
+  );
+}
+
+function OffersPanel({
+  offers,
+  redemptions,
+  onOfferAccepted,
+}: {
+  offers: OfferRow[];
+  redemptions: Map<string, OfferRedemptionSummary>;
+  onOfferAccepted: (offerId: string, promoCode?: string | null, alreadyAccepted?: boolean) => void;
+}) {
+  if (!offers.length) return null;
+
+  return (
+    <section className="mt-6 space-y-4 rounded-3xl border border-[#21334d] bg-[#0c162b]/90 p-5 shadow-lg shadow-black/30">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Tonight&apos;s offers</p>
+          <h2 className="text-lg font-semibold text-white">Perks just for guests</h2>
+        </div>
+        <p className="text-xs text-[var(--muted)]">Save codes and show staff when you redeem.</p>
+      </header>
+      <div className="space-y-3">
+        {offers.map((offer) => (
+          <OfferTile
+            key={offer.id}
+            offer={offer}
+            redemption={redemptions.get(offer.id)}
+            onOfferAccepted={onOfferAccepted}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function OfferTile({
+  offer,
+  redemption,
+  onOfferAccepted,
+}: {
+  offer: OfferRow;
+  redemption?: OfferRedemptionSummary;
+  onOfferAccepted: (offerId: string, promoCode?: string | null, alreadyAccepted?: boolean) => void;
+}) {
+  const [state, formAction] = useActionState(acceptOfferAction, acceptInitialState);
+  const announcedRef = useRef(false);
+  const isClaimed = Boolean(redemption);
+
+  useEffect(() => {
+    if (state.success && state.offerId === offer.id && !announcedRef.current) {
+      onOfferAccepted(offer.id, state.promoCode ?? offer.promo_code ?? null, state.alreadyAccepted);
+      announcedRef.current = true;
+    }
+    if (!state.success || state.offerId !== offer.id) {
+      announcedRef.current = false;
+    }
+  }, [
+    state.success,
+    state.offerId,
+    state.promoCode,
+    state.alreadyAccepted,
+    offer.id,
+    offer.promo_code,
+    onOfferAccepted,
+  ]);
+
+  const acceptedAt = redemption?.accepted_at
+    ? new Date(redemption.accepted_at).toLocaleString()
+    : null;
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-[#1d2946] bg-[#101c34]/80 p-4 shadow-inner shadow-black/20">
+      {offer.image_url ? (
+        <div className="relative h-40 w-full overflow-hidden rounded-xl border border-[#1d2946]">
+          <Image
+            src={offer.image_url}
+            alt={offer.title}
+            fill
+            className="object-cover"
+            sizes="400px"
+            unoptimized
+          />
+        </div>
+      ) : null}
+      <div className="space-y-1">
+        <h3 className="text-base font-semibold text-white">{offer.title}</h3>
+        {offer.description ? (
+          <p className="text-sm text-[var(--muted)]">{offer.description}</p>
+        ) : null}
+      </div>
+      {offer.promo_code ? (
+        <div className="rounded-xl border border-[#2f9b7a]/40 bg-[#122521] px-4 py-2 text-xs text-[#5ef1b5]">
+          {isClaimed && (redemption?.promo_code ?? offer.promo_code)
+            ? `Promo code: ${redemption?.promo_code ?? offer.promo_code}`
+            : "Save to reveal your promo code."}
+        </div>
+      ) : null}
+      {isClaimed && acceptedAt ? (
+        <p className="text-xs text-[var(--muted)]">Saved {acceptedAt}.</p>
+      ) : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <form action={formAction}>
+          <input type="hidden" name="offerId" value={offer.id} />
+          <OfferClaimButton disabled={isClaimed} />
+        </form>
+        {offer.cta_url ? (
+          <a
+            href={offer.cta_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-2xl border border-[#2f3f6c] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9fb0ff] transition hover:border-[#9fb3ff] hover:text-white"
+          >
+            {offer.cta_label ?? "View details"}
+          </a>
+        ) : null}
+      </div>
+      {state.error && (!state.offerId || state.offerId === offer.id) ? (
+        <p className="text-xs text-[#ff8ba7]">{state.error}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function OfferClaimButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+  const label = disabled ? "Saved ✓" : pending ? "Saving…" : "Save offer";
+  return (
+    <button
+      type="submit"
+      disabled={disabled || pending}
+      className={cn(
+        "rounded-2xl border border-[#2f9b7a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5] transition",
+        disabled || pending ? "opacity-60" : "hover:border-[#5ef1b5] hover:text-white",
+      )}
+    >
+      {label}
+    </button>
   );
 }
 

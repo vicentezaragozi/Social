@@ -1,9 +1,10 @@
 import { requireAuthSession } from "@/lib/supabase/auth";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getCurrentProfile, getProfileBlockStatus } from "@/lib/supabase/profile";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getDefaultVenue } from "@/lib/supabase/venues";
 
 import { SongRequestForm } from "@/components/connect/song-request-form";
+import { BlockedNotice } from "@/components/app/blocked-notice";
 
 export const metadata = {
   title: "Song Requests",
@@ -22,6 +23,11 @@ export default async function RequestsPage() {
         </p>
       </div>
     );
+  }
+
+  const { isBlocked } = getProfileBlockStatus(profile);
+  if (isBlocked) {
+    return <BlockedNotice profile={profile} />;
   }
 
   const venue = await getDefaultVenue();

@@ -30,6 +30,37 @@ export const getCurrentProfile = async () => {
   return data;
 };
 
+export const getProfileBlockStatus = (
+  profile: ProfileRow | null | undefined,
+): {
+  isBlocked: boolean;
+  blockedUntil: Date | null;
+  blockedReason: string | null;
+} => {
+  if (!profile) {
+    return { isBlocked: false, blockedUntil: null, blockedReason: null };
+  }
+
+  const reason = profile.blocked_reason ?? null;
+  if (!profile.blocked_until) {
+    const isBlocked = reason !== null;
+    return {
+      isBlocked,
+      blockedUntil: isBlocked ? null : null,
+      blockedReason: reason,
+    };
+  }
+
+  const until = new Date(profile.blocked_until);
+  const isBlocked = Number.isNaN(until.getTime()) ? false : until.getTime() > Date.now();
+
+  return {
+    isBlocked,
+    blockedUntil: isBlocked ? until : null,
+    blockedReason: reason,
+  };
+};
+
 export const upsertProfile = async (payload: Partial<ProfileInsert>) => {
   const supabase = await getSupabaseServerClient();
   const {

@@ -215,3 +215,104 @@ export async function respondInteractionAction(
   return { success: true };
 }
 
+const acceptOfferSchema = z.object({
+  offerId: z.string().uuid(),
+});
+
+export type AcceptOfferState = {
+  error?: string;
+  success?: boolean;
+  promoCode?: string | null;
+  offerId?: string;
+  alreadyAccepted?: boolean;
+};
+
+export async function acceptOfferAction(
+  _prev: AcceptOfferState,
+  formData: FormData,
+): Promise<AcceptOfferState> {
+  const parsed = acceptOfferSchema.safeParse({
+    offerId: formData.get("offerId"),
+  });
+
+  if (!parsed.success) {
+    return { error: "Unable to save offer right now." };
+  }
+
+  const supabase = await getSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Please sign in again." };
+  }
+
+  const profileId = user.id;
+  const { offerId } = parsed.data;
+  const now = new Date().toISOString();
+
+  const { data: offer, error: offerError } = await supabase
+    .from("offers")
+    .select("id, venue_id, promo_code, title, is_active, start_at, end_at")
+    .eq("id", offerId)
+    .maybeSingle();
+
+  if (offerError || !offer) {
+    return { error: "Offer not found.", offerId };
+  }
+
+  if (!offer.is_active) {
+    return { error: "This offer is no longer active.", offerId };
+  }
+
+  if (new Date(offer.start_at) > new Date(now)) {
+    return { error: "This offer isn't available yet.", offerId };
+  }
+
+  if (offer.end_at && new Date(offer.end_at) <= new Date(now)) {
+    return { error: "This offer has expired.", offerId };
+  }
+
+  const { data: existingRedemption, error: redemptionFetchError } = await supabase
+    .from("offer_redemptions")
+    .select("id, promo_code, status")
+    .eq("offer_id", offerId)
+    .eq("profile_id", profileId)
+    .maybeSingle();
+
+  if (redemptionFetchError) {
+    console.error("Failed to load redemption", redemptionFetchError);
+    return { error: "Unable to save offer right now.", offerId };
+  }
+
+  if (existingRedemption) {
+    return {
+      success: true,
+      alreadyAccepted: true,
+      offerId,
+      promoCode: existingRedemption.promo_code ?? offer.promo_code ?? null,
+    };
+  }
+
+  const { error: insertError } = await supabase.from("offer_redemptions").insert({
+    offer_id: offerId,
+    profile_id: profileId,
+    status: "accepted",
+    promo_code: offer.promo_code ?? null,
+  });
+
+  if (insertError) {
+    console.error("Failed to save offer redemption", insertError);
+    return { error: "Unable to save offer right now.", offerId };
+  }
+
+  revalidatePath("/app");
+  revalidatePath("/admin/offers");
+  return {
+    success: true,
+    offerId,
+    promoCode: offer.promo_code ?? null,
+  };
+}
+

@@ -3,7 +3,8 @@ import "@/app/globals.css";
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app/app-shell";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { BlockedNotice } from "@/components/app/blocked-notice";
+import { getCurrentProfile, getProfileBlockStatus } from "@/lib/supabase/profile";
 import { getActiveSessionMetadata } from "@/lib/supabase/session";
 import { getDefaultVenue } from "@/lib/supabase/venues";
 
@@ -20,13 +21,15 @@ export default async function AppLayout({
   if (!activeMetadata) {
     redirect("/?error=session_inactive");
   }
-  
+
+  const { isBlocked } = getProfileBlockStatus(profile);
+
   return (
     <AppShell 
       currentUserAvatar={profile?.avatar_url ?? null}
       currentUserName={profile?.display_name ?? "Guest"}
     >
-      {children}
+      {profile && isBlocked ? <BlockedNotice profile={profile} /> : children}
     </AppShell>
   );
 }

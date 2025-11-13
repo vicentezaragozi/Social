@@ -34,13 +34,14 @@ export default async function ConnectPage({
   const profile = await getCurrentProfile();
 
   if (!profile) {
-    redirect(`/${locale}/onboarding`);
+    redirect({ href: "/onboarding", locale });
   }
 
+  // TypeScript narrowing: profile is non-null after redirect check
   const { isBlocked } = getProfileBlockStatus(profile);
 
   if (isBlocked) {
-    return <BlockedNotice profile={profile} />;
+    return <BlockedNotice profile={profile!} />;
   }
 
   const supabase = await getSupabaseServerClient();
@@ -53,7 +54,7 @@ export default async function ConnectPage({
     .maybeSingle();
 
   const venue = await getDefaultVenue();
-  const profileId = profile.id;
+  const profileId = profile!.id;
 
   if (!profileId || profileId === "null") {
     throw new Error("Profile ID missing. Complete onboarding again or contact support.");
@@ -69,7 +70,7 @@ export default async function ConnectPage({
     console.warn("Redirecting to landing because session is inactive", error);
     // Ensure locale is valid before redirecting
     const validLocale = locale && ['en', 'es'].includes(locale) ? locale : 'en';
-    redirect(`/${validLocale}?error=session_inactive`);
+    redirect({ href: "/?error=session_inactive", locale: validLocale });
   }
 
   // Fetch blocked users to filter them out
@@ -251,10 +252,10 @@ export default async function ConnectPage({
     <ConnectFeed
       currentProfile={{
         id: profileId,
-        displayName: profile.display_name,
-        avatarUrl: profile.avatar_url,
-        bio: profile.bio,
-        isPrivate: profile.is_private,
+        displayName: profile!.display_name,
+        avatarUrl: profile!.avatar_url,
+        bio: profile!.bio,
+        isPrivate: profile!.is_private,
       }}
       venue={{
         id: venue.id,

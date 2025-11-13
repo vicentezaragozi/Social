@@ -63,10 +63,10 @@ export function AdminSignInForm() {
   );
 
   useEffect(() => {
-    if (state.success) {
+    if ('success' in state && state.success) {
       clearSavedState();
     }
-  }, [state.success, clearSavedState]);
+  }, [state, clearSavedState]);
 
   return (
     <form ref={formRef} action={formAction} className="space-y-4">

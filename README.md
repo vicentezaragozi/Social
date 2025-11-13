@@ -54,6 +54,22 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 | `npm run start` | Run the production server |
 | `npm run lint` | Run ESLint across the project |
 
+## Deployment
+
+Ready to deploy? See [DEPLOYMENT.md](./DEPLOYMENT.md) for a complete guide to deploying to Vercel.
+
+**Quick Start:**
+1. Push your code to GitHub/GitLab/Bitbucket
+2. Import your repository in [Vercel](https://vercel.com/new)
+3. Add environment variables (see DEPLOYMENT.md)
+4. Deploy! 🚀
+
+The project includes:
+- ✅ `vercel.json` configuration
+- ✅ Production build tested and working
+- ✅ Environment variables documented
+- ✅ Deployment guide with step-by-step instructions
+
 ## Project Structure
 
 ```

@@ -29,7 +29,7 @@ export function useFormStatePreservation<T>(
   setFormData: ((data: T) => void) | null,
   options?: {
     enabled?: boolean;
-    formRef?: React.RefObject<HTMLFormElement>;
+    formRef?: React.RefObject<HTMLFormElement | null>;
     onRestore?: (data: T) => void;
   }
 ) {

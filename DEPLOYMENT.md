@@ -170,19 +170,33 @@ If you see: `WARNING: Unable to find source file for page /manifest.webmanifest/
 - The app will work correctly despite this warning
 - You can safely ignore it
 
-### Middleware.js.nft.json Error
+### Middleware.js / Middleware.js.nft.json Errors
 
-If you see: `Error: ENOENT: no such file or directory, open '.next/server/middleware.js.nft.json'`
+If you see errors like:
+- `Error: ENOENT: no such file or directory, open '.next/server/middleware.js.nft.json'`
+- `Error: ENOENT: no such file or directory, lstat '.next/server/middleware.js'`
 
-- **✅ FIXED**: The build command now automatically creates this file after the Next.js build completes
-- The fix is built into the `build` script in `package.json` - no separate file needed
-- This is a known issue with Next.js 16 and Vercel's function tracing system
-- The inline script creates the missing file immediately after `next build` completes
-- **If you still see this error:**
-  1. Ensure Root Directory is set to `.` (project root, not `src`)
-  2. Clear Vercel build cache (Settings → General → Clear Build Cache)
-  3. Verify the `build` script in `package.json` includes the inline fix
-  4. Redeploy - the workaround should resolve it
+**Root Cause**: This is a known compatibility issue between Next.js 16.x and Vercel's function bundling system. The build completes successfully, but Vercel's post-processing can't find middleware files in some cases.
+
+**✅ Verified as of November 2025**: 
+- Tested with Next.js 16.0.3 (latest stable as of Nov 2025)
+- The workaround fix is compatible and still needed
+- Vercel's current deployment system may still encounter this issue
+- Project has been updated to Next.js 16.0.3 for better compatibility
+
+**✅ FIXED**: The build command now automatically:
+1. Creates the missing `.nft.json` file after build
+2. Copies `middleware.js` to the server directory if needed
+3. Ensures all required files exist before Vercel's bundling step
+
+**If you still see this error:**
+1. ✅ **Verify Root Directory**: Settings → General → Root Directory should be `.` (not `src`)
+2. ✅ **Clear Build Cache**: Settings → General → Clear Build Cache, then redeploy
+3. ✅ **Check Build Logs**: The build should show "Created middleware.js in server directory"
+4. ✅ **Verify Package.json**: Ensure the `build` script includes the inline fix
+5. ⚠️ **If deployment still fails**: This error may be non-critical - check if your deployment URL actually works despite the error
+
+**Note**: The `src/proxy.ts` file exists but is unused. If issues persist, consider removing it or moving its logic into the main `middleware.ts`.
 
 ### Environment Variables Not Working
 

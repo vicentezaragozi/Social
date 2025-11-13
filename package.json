@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node -e \"const fs=require('fs');const p='.next/server/middleware.js.nft.json';const d=require('path').dirname(p);if(!fs.existsSync(d))fs.mkdirSync(d,{recursive:true});if(!fs.existsSync(p))fs.writeFileSync(p,JSON.stringify({version:1,files:[],versionedFiles:[]},null,2))\"",
+    "build": "next build && node -e \"const fs=require('fs');const path=require('path');const serverDir='.next/server';if(!fs.existsSync(serverDir))fs.mkdirSync(serverDir,{recursive:true});const nftPath=path.join(serverDir,'middleware.js.nft.json');if(!fs.existsSync(nftPath))fs.writeFileSync(nftPath,JSON.stringify({version:1,files:[],versionedFiles:[]},null,2));const mwPath=path.join(serverDir,'middleware.js');if(!fs.existsSync(mwPath)&&fs.existsSync('.next/middleware.js')){const mwContent=fs.readFileSync('.next/middleware.js');fs.writeFileSync(mwPath,mwContent);console.log('Created middleware.js in server directory')}\"",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run"
@@ -16,7 +16,7 @@
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.24",
-    "next": "16.0.1",
+    "next": "^16.0.3",
     "next-intl": "^4.5.2",
     "qrcode": "^1.5.4",
     "react": "19.2.0",
@@ -32,7 +32,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.0.1",
+    "eslint-config-next": "^16.0.3",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^5.1.4",

@@ -2,6 +2,7 @@ import "./globals.css";
 
 import {Geist, Geist_Mono} from "next/font/google";
 import type {ReactNode} from "react";
+import type { Metadata } from "next";
 
 import {routing} from "@/i18n";
 import type {AppLocale} from "@/i18n";
@@ -17,6 +18,19 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const metadata: Metadata = {
+  icons: {
+    icon: [
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: [
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icons/icon.svg",
+  },
+};
 
 export default async function RootLayout({
   children,

@@ -1,22 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import {usePathname} from "next/navigation";
+import {useTranslations} from "next-intl";
 
+import {Link} from "@/i18n";
 import { SocialWordmark } from "@/components/brand/social-wordmark";
+import {LanguageToggle} from "@/components/global/language-toggle";
 import { cn } from "@/lib/utils";
-
-const navItems: Array<{
-  href: string;
-  label: string;
-  icon: string;
-}> = [
-  { href: "/app", label: "Connect", icon: "❤️" },
-  { href: "/matches", label: "Matches", icon: "✨" },
-  { href: "/requests", label: "Requests", icon: "🎵" },
-  { href: "/offers", label: "Offers", icon: "🎁" },
-  { href: "/profile", label: "Profile", icon: "👤" },
-];
 
 export function AppShell({ 
   children,
@@ -27,7 +17,26 @@ export function AppShell({
   currentUserAvatar: string | null;
   currentUserName: string;
 }) {
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = (() => {
+    const normalized = rawPathname.replace(/^\/[a-zA-Z-]+/, "") || "/";
+    return normalized.startsWith("/") ? normalized : `/${normalized}`;
+  })();
+  const tNav = useTranslations("appShell.nav");
+  const tActions = useTranslations("common.actions");
+  const tAria = useTranslations("common.aria");
+
+  const navItems: Array<{
+    href: string;
+    label: string;
+    icon: string;
+  }> = [
+    { href: "/app", label: tNav("connect"), icon: "❤️" },
+    { href: "/matches", label: tNav("matches"), icon: "✨" },
+    { href: "/requests", label: tNav("requests"), icon: "🎵" },
+    { href: "/offers", label: tNav("offers"), icon: "🎁" },
+    { href: "/profile", label: tNav("profile"), icon: "👤" },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-[#040918] text-white">
@@ -57,10 +66,12 @@ export function AppShell({
             })}
           </nav>
           <div className="flex items-center gap-3">
+            <LanguageToggle className="hidden md:flex" />
+            <LanguageToggle className="md:hidden px-2" />
             <Link
               href="/sign-out"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-semibold uppercase tracking-[0.3em] text-[#9db3ff] transition hover:border-white/30 hover:bg-white/10 md:hidden"
-              aria-label="Sign out"
+              aria-label={tAria("signOut")}
             >
               ⎋
             </Link>
@@ -68,12 +79,12 @@ export function AppShell({
               href="/sign-out"
               className="hidden rounded-full border border-white/10 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#9db3ff] transition hover:border-white/30 hover:text-white md:inline-flex"
             >
-              Sign out
+              {tActions("signOut")}
             </Link>
             <Link
               href="/profile"
               className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 transition hover:border-white/30 hover:bg-white/10"
-              aria-label="Profile"
+              aria-label={tAria("profile")}
             >
               {currentUserAvatar ? (
                 <img

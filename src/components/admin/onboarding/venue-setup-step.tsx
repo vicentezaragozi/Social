@@ -3,7 +3,8 @@
 import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
-import { setupVenueAction, type VenueSetupState } from "@/app/(auth)/sign-in/admin/onboarding/actions";
+import { useTranslations } from "next-intl";
+import { setupVenueAction, type VenueSetupState } from "@/app/[locale]/(auth)/sign-in/admin/onboarding/actions";
 
 type Venue = {
   id: string;
@@ -47,13 +48,14 @@ const initialState: VenueSetupState = {};
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const t = useTranslations("admin.onboarding.venue.actions");
   return (
     <button
       type="submit"
       disabled={pending}
       className="rounded-2xl bg-gradient-to-r from-[#6b9eff] to-[#4a7fd9] px-8 py-4 font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {pending ? "Saving..." : "Continue to Session Setup"}
+      {pending ? t("saving") : t("continue")}
     </button>
   );
 }
@@ -68,6 +70,10 @@ export function VenueSetupStep({
   onDraftChange,
 }: VenueSetupStepProps) {
   const [state, formAction] = useActionState(setupVenueAction, initialState);
+  const t = useTranslations("admin.onboarding.venue");
+  const tFields = useTranslations("admin.onboarding.venue.fields");
+  const tFileStatus = useTranslations("admin.onboarding.venue.fileStatus");
+  const tActions = useTranslations("admin.onboarding.venue.actions");
 
   // If setup is successful, call onComplete
   useEffect(() => {
@@ -95,9 +101,9 @@ export function VenueSetupStep({
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h1 className="mb-3 text-4xl font-bold text-white">Welcome to Social! 🎉</h1>
+        <h1 className="mb-3 text-4xl font-bold text-white">{t("title")}</h1>
         <p className="text-lg text-[var(--muted)]">
-          Let's set up your venue. This information will be visible to guests.
+          {t("description")}
         </p>
       </div>
 
@@ -116,7 +122,7 @@ export function VenueSetupStep({
           {/* Venue Name */}
           <div className="space-y-2">
             <label className="block text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Venue Name *
+              {tFields("venueName")} *
             </label>
             <input
               type="text"
@@ -124,7 +130,7 @@ export function VenueSetupStep({
               required
               value={draft.venueName}
               onChange={(event) => onDraftChange({ venueName: event.target.value })}
-              placeholder="e.g., The Night Owl"
+              placeholder={tFields("venueNamePlaceholder")}
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
             />
           </div>
@@ -132,14 +138,14 @@ export function VenueSetupStep({
           {/* Description */}
           <div className="space-y-2">
             <label className="block text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Description
+              {tFields("description")}
             </label>
             <textarea
               name="description"
               rows={4}
               value={draft.description}
               onChange={(event) => onDraftChange({ description: event.target.value })}
-              placeholder="Tell guests about your venue's vibe..."
+              placeholder={tFields("descriptionPlaceholder")}
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
             />
           </div>
@@ -147,14 +153,14 @@ export function VenueSetupStep({
           {/* Logo Upload */}
           <div className="space-y-2">
             <label className="block text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Venue Logo
+              {tFields("logo")}
             </label>
             {draft.logoPreview && (
               <div className="mb-3 flex justify-center">
                 <div className="relative h-24 w-24 overflow-hidden rounded-2xl border border-white/10 bg-[#0a1024]">
                   <Image
                     src={draft.logoPreview}
-                    alt="Logo preview"
+                    alt={tFields("logoPreview")}
                     fill
                     className="object-cover"
                     unoptimized
@@ -170,21 +176,21 @@ export function VenueSetupStep({
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white file:mr-4 file:rounded-xl file:border-0 file:bg-[#1a2a4a] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#6b9eff] hover:file:bg-[#243556]"
             />
             <p className="mt-2 text-xs text-white/70">
-              {draft.logoFilename ?? (draft.logoPreview ? "Existing logo" : "No file chosen")}
+              {draft.logoFilename ?? (draft.logoPreview ? tFileStatus("existing") : tFileStatus("noFile"))}
             </p>
           </div>
 
           {/* Address */}
           <div className="space-y-2">
             <label className="block text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Address
+              {tFields("address")}
             </label>
             <input
               type="text"
               name="address"
               value={draft.address}
               onChange={(event) => onDraftChange({ address: event.target.value })}
-              placeholder="123 Main St, City, State"
+              placeholder={tFields("addressPlaceholder")}
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
             />
           </div>
@@ -192,7 +198,7 @@ export function VenueSetupStep({
           {/* Capacity */}
           <div className="space-y-2">
             <label className="block text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Capacity
+              {tFields("capacity")}
             </label>
             <input
               type="number"
@@ -200,7 +206,7 @@ export function VenueSetupStep({
               min="1"
               value={draft.capacity}
               onChange={(event) => onDraftChange({ capacity: event.target.value })}
-              placeholder="200"
+              placeholder={tFields("capacityPlaceholder")}
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
             />
           </div>
@@ -218,7 +224,7 @@ export function VenueSetupStep({
                 onClick={onBack}
                 className="rounded-2xl border border-white/10 px-6 py-4 font-semibold text-white transition-colors hover:bg-white/5"
               >
-                ← Back
+                {tActions("back")}
               </button>
             ) : (
               <div />

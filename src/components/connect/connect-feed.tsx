@@ -5,14 +5,16 @@ import Link from "next/link";
 import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TouchEvent } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 
 import {
   acceptOfferAction,
   sendInteractionAction,
   type AcceptOfferState,
   type InteractionActionState,
-} from "@/app/(app)/app/actions";
+} from "@/app/[locale]/(app)/app/actions";
 import { cn } from "@/lib/utils";
+import { buildWhatsAppLink } from "@/lib/util/whatsapp";
 
 import type { Database } from "@/lib/supabase/types";
 
@@ -84,6 +86,7 @@ type ConnectCard = {
   invitedByMe: boolean;
   theyLikedYou: boolean;
   matched: boolean;
+  whatsappUrl: string | null;
   highlightTags: string[];
   galleryUrls: string[];
   favoriteTrackUrl: string | null;
@@ -114,6 +117,11 @@ type ToastMessage = {
 };
 
 export function ConnectFeed(props: ConnectFeedProps) {
+  const tToasts = useTranslations("app.connect.toasts");
+  const tButtons = useTranslations("app.connect.buttons");
+  const tLabels = useTranslations("app.connect.labels");
+  const tWhatsApp = useTranslations("app.matches.whatsapp");
+  
   const groupedOutgoing = useMemo(() => {
     const map = new Map<string, Partial<Record<"like" | "invite", InteractionRow>>>();
     props.outgoingInteractions.forEach((interaction) => {
@@ -178,6 +186,27 @@ export function ConnectFeed(props: ConnectFeedProps) {
     setOfferRedemptions(initialOfferRedemptions);
   }, [initialOfferRedemptions]);
 
+  // Create a map of profile IDs to their match WhatsApp URLs
+  const matchWhatsAppMap = useMemo(() => {
+    const map = new Map<string, string | null>();
+    const whatsappMessage = tWhatsApp("messageTemplate");
+    matchesWithPartner.forEach((match) => {
+      const partnerId =
+        match.partner?.id ??
+        (match.profile_a === props.currentProfile.id ? match.profile_b : match.profile_a);
+      if (partnerId && match.partner) {
+        // Build WhatsApp link with partner's phone number if available
+        if (match.partner.phone_number) {
+          map.set(partnerId, buildWhatsAppLink(whatsappMessage, match.partner.phone_number));
+        } else {
+          // Fallback to stored URL
+          map.set(partnerId, match.whatsapp_url ?? null);
+        }
+      }
+    });
+    return map;
+  }, [matchesWithPartner, props.currentProfile.id, tWhatsApp]);
+
   const cards = useMemo<ConnectCard[]>(() => {
     return props.attendees
       .map((session) => {
@@ -205,6 +234,7 @@ export function ConnectFeed(props: ConnectFeedProps) {
           invitedByMe: outgoing.invite?.status === "pending",
           theyLikedYou,
           matched,
+          whatsappUrl: matchWhatsAppMap.get(profile.id) ?? null,
           highlightTags: highlightTags.length ? highlightTags : extractVibeTags(profile.bio ?? ""),
           galleryUrls,
           favoriteTrackUrl: profile.favorite_track_url,
@@ -212,7 +242,7 @@ export function ConnectFeed(props: ConnectFeedProps) {
         } satisfies ConnectCard;
       })
       .filter(Boolean) as ConnectCard[];
-  }, [props.attendees, groupedOutgoing, groupedIncoming, matchedProfiles]);
+  }, [props.attendees, groupedOutgoing, groupedIncoming, matchedProfiles, matchWhatsAppMap]);
 
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const removeToast = useCallback((id: string) => {
@@ -246,13 +276,13 @@ export function ConnectFeed(props: ConnectFeedProps) {
       });
       addToast({
         variant: "invite",
-        title: alreadyAccepted ? "Offer already saved" : "Offer saved",
+        title: alreadyAccepted ? tToasts("offerAlreadySaved") : tToasts("offerSaved"),
         description: promoCode
-          ? `Show this code at the venue: ${promoCode}`
-          : "Saved to your offers list.",
+          ? tToasts("offerSavedDescription", { promoCode })
+          : tToasts("offerSavedGeneric"),
       });
     },
-    [addToast],
+    [addToast, tToasts],
   );
   const [showFirstVisitTooltip, setShowFirstVisitTooltip] = useState(false);
   const [celebrationMatch, setCelebrationMatch] = useState<EnrichedMatch | null>(null);
@@ -315,31 +345,37 @@ export function ConnectFeed(props: ConnectFeedProps) {
     if (!Number.isFinite(newestTimestamp)) return;
     const lastSeen = Number(window.localStorage.getItem(MATCH_SEEN_KEY) ?? 0);
     const now = Date.now();
-    if (lastSeen === 0 && now - newestTimestamp > 5 * 60 * 1000) {
+    
+    // If this is a very recent match (within last 2 minutes), always show it
+    // This ensures matches created just now are shown immediately
+    const isVeryRecent = now - newestTimestamp < 2 * 60 * 1000;
+    
+    if (lastSeen === 0 && !isVeryRecent && now - newestTimestamp > 5 * 60 * 1000) {
+      // Old match on first visit - don't show
       window.localStorage.setItem(MATCH_SEEN_KEY, String(newestTimestamp));
       return;
     }
-    if (newestTimestamp <= lastSeen) return;
+    if (!isVeryRecent && newestTimestamp <= lastSeen) return;
 
     const partnerName = newest.partner?.display_name ?? "a guest";
     addToast({
       variant: "match",
-      title: "New match unlocked",
-      description: `You and ${partnerName} unlocked chat.`,
+      title: tToasts("newMatchUnlocked"),
+      description: tToasts("matchDescription", { partnerName }),
       action: newest.whatsapp_url
         ? {
-            label: "Open WhatsApp",
+            label: tToasts("openWhatsApp"),
             href: newest.whatsapp_url,
             external: true,
           }
         : {
-            label: "View matches",
+            label: tToasts("viewMatches"),
             href: "/matches",
           },
     });
     window.localStorage.setItem(MATCH_SEEN_KEY, String(newestTimestamp));
     setCelebrationMatch(newest);
-  }, [matchesWithPartner, addToast]);
+  }, [matchesWithPartner, addToast, tToasts]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -369,17 +405,17 @@ export function ConnectFeed(props: ConnectFeedProps) {
 
     addToast({
       variant: "invite",
-      title: isInvite ? "New invite incoming" : "New heart received",
+      title: isInvite ? tToasts("newInviteIncoming") : tToasts("newHeartReceived"),
       description: isInvite
-        ? `${senderName} invited you to chat.`
-        : `${senderName} sent you a heart.`,
+        ? tToasts("inviteDescription", { senderName })
+        : tToasts("heartDescription", { senderName }),
       action: {
-        label: "Review in matches",
+        label: tToasts("reviewInMatches"),
         href: "/matches",
       },
     });
     window.localStorage.setItem(INVITE_SEEN_KEY, String(newestTimestamp));
-  }, [props.incomingInteractions, cards, addToast]);
+  }, [props.incomingInteractions, cards, addToast, tToasts]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -465,7 +501,7 @@ export function ConnectFeed(props: ConnectFeedProps) {
                 key={card.sessionId}
                 className={cn(
                         "relative aspect-[10/16] w-full max-w-[360px] overflow-hidden rounded-[32px] border border-[#1d2946] bg-[#0e1426]/95 shadow-[0_30px_60px_-35px_rgba(6,4,28,0.9)] backdrop-blur transition-transform md:w-[min(320px,82vw)] md:shrink-0 md:snap-center",
-                        index === activeIndex ? "scale-100" : "md:scale-[0.94] md:opacity-70",
+                        index === activeIndex ? "scale-100" : "md:scale-[0.94]",
                 )}
               >
                       <CardMedia
@@ -478,6 +514,14 @@ export function ConnectFeed(props: ConnectFeedProps) {
                         <div className="space-y-4">
                           <div className="flex items-start justify-between gap-4">
                   <div className="space-y-2">
+                    {card.isVenueHost && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#1a2a4a] px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.1em] text-[#6b9eff]">
+                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        {tLabels("staff")}
+                      </span>
+                    )}
                     <div className="flex items-center gap-2">
                       <h3 className="text-2xl font-semibold leading-tight">
                         {card.displayName}
@@ -487,14 +531,6 @@ export function ConnectFeed(props: ConnectFeedProps) {
                                     </span>
                                   ) : null}
                       </h3>
-                      {card.isVenueHost && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[#1a2a4a] px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.1em] text-[#6b9eff]">
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                          </svg>
-                          Staff
-                        </span>
-                      )}
                     </div>
                               {card.tagline ? (
                                 <p className="text-sm font-medium text-[#9fb0ff]">{card.tagline}</p>
@@ -503,19 +539,33 @@ export function ConnectFeed(props: ConnectFeedProps) {
                                 <p className="text-sm text-[var(--muted)] line-clamp-3">{detailBio}</p>
                               ) : (
                                 <p className="text-sm text-[var(--muted)] line-clamp-3">
-                      {card.bio || "Keeping the vibe mysterious."}
+                      {card.bio || tLabels("keepingVibeMysterious")}
                     </p>
                               )}
                             </div>
                             <div className="flex flex-col items-end gap-2">
-                              <InteractionButton
-                                receiverId={card.profileId}
-                                activeSessionId={props.activeSessionId}
-                                type="invite"
-                                label={card.invitedByMe ? "Vibe sent ✓" : "Send vibe"}
-                                icon="✨"
-                                disabled={card.invitedByMe || card.matched}
-                              />
+                              {card.matched && card.whatsappUrl ? (
+                                <Link
+                                  href={card.whatsappUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="group flex min-w-[140px] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#25D366] to-[#20BA5A] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-[#25D366]/30 transition hover:from-[#2AE371] hover:to-[#25D366] hover:shadow-xl hover:shadow-[#25D366]/40 hover:scale-[1.03]"
+                                >
+                                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                                  </svg>
+                                  {tButtons("message")}
+                                </Link>
+                              ) : (
+                                <InteractionButton
+                                  receiverId={card.profileId}
+                                  activeSessionId={props.activeSessionId}
+                                  type="invite"
+                                  label={card.invitedByMe ? tButtons("vibeSent") : tButtons("sendVibe")}
+                                  icon="✨"
+                                  disabled={card.invitedByMe}
+                                />
+                              )}
                             </div>
                           </div>
                           <div className="space-y-3">
@@ -528,12 +578,12 @@ export function ConnectFeed(props: ConnectFeedProps) {
                                 className="inline-flex items-center gap-2 text-xs font-semibold text-[#9fb0ff] hover:text-white"
                               >
                                 <span className="text-base">🎧</span>
-                                Favorite track
+                                {tLabels("favoriteTrack")}
                               </a>
                             ) : null}
                     {card.theyLikedYou && !card.matched ? (
                       <div className="inline-flex items-center gap-2 rounded-full border border-[#5ef1b5]/40 bg-[#122c26] px-3 py-1 text-xs font-medium text-[#5ef1b5]">
-                        <span>✨</span> They already sent you a vibe
+                        <span>✨</span> {tLabels("theyLikedYou")}
                       </div>
                     ) : null}
                     {card.matched ? (
@@ -541,11 +591,11 @@ export function ConnectFeed(props: ConnectFeedProps) {
                         href="/matches"
                         className="inline-flex items-center gap-2 rounded-full border border-[#8a2be2]/40 bg-[#1b1030] px-3 py-1 text-xs font-semibold text-[#c9a3ff]"
                       >
-                        View match details
+                        {tLabels("viewMatchDetails")}
                       </Link>
                     ) : null}
                             <p className="text-right text-[11px] font-semibold uppercase tracking-[0.35em] text-[#8fa4ff]">
-                              Match on mutual vibe → WhatsApp
+                              {tLabels("matchOnMutual")}
                             </p>
                   </div>
                   </div>
@@ -625,7 +675,9 @@ function LiveHeader({
   attendees: ConnectCard[];
   sessionEmail: string;
 }) {
-  const liveLabel = liveCount === 1 ? "guest" : "guests";
+  const t = useTranslations("app.connect.header");
+  const tButtons = useTranslations("app.connect.buttons");
+  const liveLabel = liveCount === 1 ? t("guest") : t("guests");
 
   return (
     <header className="space-y-4">
@@ -633,7 +685,7 @@ function LiveHeader({
         <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-2 rounded-full border border-[#283567] bg-[#111a33]/60 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-[#9db3ff]">
             <span className="text-base leading-none">📍</span>
-            Social @ {venueName}
+            {t("socialAt", { venueName })}
           </span>
           <div className="flex items-center gap-2 rounded-full border border-[#2f9b7a]/40 bg-[#122521] px-3 py-1.5">
             <span className="relative flex h-2 w-2">
@@ -641,7 +693,7 @@ function LiveHeader({
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#5ef1b5]"></span>
             </span>
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#5ef1b5]">
-              {liveCount} {liveLabel} live
+              {liveCount} {liveLabel} {t("live")}
             </span>
         </div>
           </div>
@@ -678,16 +730,16 @@ function LiveHeader({
       <div className="flex flex-col gap-3 text-xs text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <span className="rounded-full border border-[#273564] bg-[#101a33]/70 px-3 py-1 font-semibold uppercase tracking-[0.4em] text-[11px] text-[#8796c6]">
-            Swipe the deck
+            {t("swipeDeck")}
           </span>
           <span>
             {attendees.length
-              ? "Swipe or tap to send vibes. Match when both of you connect → WhatsApp unlocked."
-              : "You&apos;re opening the floor—send vibes to spark connections."}
+              ? t("swipeInstructions")
+              : t("openingFloor")}
           </span>
         </div>
         <Link href="/matches" className="self-start rounded-full border border-[#2d3f6f] px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-[var(--muted)] hover:border-[var(--accent)] hover:text-white sm:self-auto">
-          Matches
+          {tButtons("viewMatches")}
         </Link>
       </div>
     </header>
@@ -780,6 +832,7 @@ export function OffersPanel({
   redemptions: Map<string, OfferRedemptionSummary>;
   onOfferAccepted?: (offerId: string, promoCode?: string | null, alreadyAccepted?: boolean) => void;
 }) {
+  const t = useTranslations("app.connect.offers");
   const handleAccept =
     onOfferAccepted ??
     (() => {
@@ -792,10 +845,10 @@ export function OffersPanel({
     <section className="mt-6 space-y-4 rounded-3xl border border-[#21334d] bg-[#0c162b]/90 p-5 shadow-lg shadow-black/30">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Tonight&apos;s offers</p>
-          <h2 className="text-lg font-semibold text-white">Perks just for guests</h2>
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">{t("tonightsOffers")}</p>
+          <h2 className="text-lg font-semibold text-white">{t("perksForGuests")}</h2>
         </div>
-        <p className="text-xs text-[var(--muted)]">Save codes and show staff when you redeem.</p>
+        <p className="text-xs text-[var(--muted)]">{t("saveCodes")}</p>
       </header>
       <div className="space-y-3">
         {offers.map((offer) => (
@@ -820,6 +873,7 @@ function OfferTile({
   redemption?: OfferRedemptionSummary;
   onOfferAccepted: (offerId: string, promoCode?: string | null, alreadyAccepted?: boolean) => void;
 }) {
+  const t = useTranslations("app.connect.offers");
   const [state, formAction] = useActionState(acceptOfferAction, acceptInitialState);
   const announcedRef = useRef(false);
   const isClaimed = Boolean(redemption);
@@ -869,12 +923,12 @@ function OfferTile({
       {offer.promo_code ? (
         <div className="rounded-xl border border-[#2f9b7a]/40 bg-[#122521] px-4 py-2 text-xs text-[#5ef1b5]">
           {isClaimed && (redemption?.promo_code ?? offer.promo_code)
-            ? `Promo code: ${redemption?.promo_code ?? offer.promo_code}`
-            : "Save to reveal your promo code."}
+            ? t("promoCode", { code: redemption?.promo_code ?? offer.promo_code })
+            : t("saveToReveal")}
         </div>
       ) : null}
       {isClaimed && acceptedAt ? (
-        <p className="text-xs text-[var(--muted)]">Saved {acceptedAt}.</p>
+        <p className="text-xs text-[var(--muted)]">{t("savedAt", { time: acceptedAt })}.</p>
       ) : null}
       <div className="flex flex-wrap items-center gap-2">
         <form action={formAction}>
@@ -888,7 +942,7 @@ function OfferTile({
             rel="noopener noreferrer"
             className="rounded-2xl border border-[#2f3f6c] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9fb0ff] transition hover:border-[#9fb3ff] hover:text-white"
           >
-            {offer.cta_label ?? "View details"}
+            {offer.cta_label ?? t("viewDetails")}
           </a>
         ) : null}
       </div>
@@ -900,8 +954,9 @@ function OfferTile({
 }
 
 function OfferClaimButton({ disabled }: { disabled: boolean }) {
+  const t = useTranslations("app.connect.offers");
   const { pending } = useFormStatus();
-  const label = disabled ? "Saved ✓" : pending ? "Saving…" : "Save offer";
+  const label = disabled ? t("saved") : pending ? t("saving") : t("saveOffer");
   return (
     <button
       type="submit"
@@ -917,11 +972,12 @@ function OfferClaimButton({ disabled }: { disabled: boolean }) {
 }
 
 function CardOverlay({ card }: { card: ConnectCard }) {
+  const t = useTranslations("app.connect.labels");
   if (!card.likedByMe && !card.theyLikedYou) return null;
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-end p-4">
       <div className="rounded-full border border-white/20 bg-black/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-white">
-        {card.matched ? "Matched" : card.theyLikedYou ? "They liked you" : "Heart sent"}
+        {card.matched ? t("matched") : card.theyLikedYou ? t("theyLikedYou") : t("heartSent")}
       </div>
     </div>
   );
@@ -945,34 +1001,60 @@ function CarouselDots({ count, activeIndex }: { count: number; activeIndex: numb
 }
 
 function MatchesPreview({ matches }: { matches: EnrichedMatch[] }) {
+  const t = useTranslations("app.connect.matchesPreview");
+  const tCommonActions = useTranslations("common.actions");
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   if (!matches.length) return null;
   const recent = matches[0];
-  const partnerName = recent.partner?.display_name ?? "Your match";
-  const matchTime = new Date(recent.created_at ?? 0).toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  const partnerName = recent.partner?.display_name ?? t("aGuest");
+  
+  // Format time consistently to avoid hydration mismatches
+  const formatMatchTime = () => {
+    if (!mounted) {
+      // Return ISO string during SSR
+      try {
+        return new Date(recent.created_at ?? 0).toISOString();
+      } catch {
+        return "";
+      }
+    }
+    try {
+      return new Date(recent.created_at ?? 0).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return "";
+    }
+  };
+  
+  const matchTime = formatMatchTime();
   const whatsappHref = recent.whatsapp_url ?? "/matches";
   const isExternal = Boolean(recent.whatsapp_url);
-  const ctaLabel = isExternal ? "Jump into WhatsApp" : "View matches";
+  const ctaLabel = isExternal ? t("jumpIntoWhatsApp") : t("viewMatches");
 
   return (
     <section className="mt-10 space-y-3 rounded-3xl border border-[#223253] bg-[#0d162a] p-6 text-sm text-[var(--muted)] shadow-[0_25px_45px_-30px_rgba(6,9,21,0.85)]">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Matches</p>
-          <h2 className="text-lg font-semibold text-white">Keep the vibe going</h2>
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">{t("matches")}</p>
+          <h2 className="text-lg font-semibold text-white">{t("keepVibeGoing")}</h2>
         </div>
         <Link
           href="/matches"
           className="rounded-full border border-[#2f3f6c] px-3 py-1 text-[11px] uppercase tracking-[0.25em] hover:border-[var(--accent)] hover:text-white"
         >
-          View all
+          {tCommonActions("viewAll")}
         </Link>
       </div>
-      <p>
-        Matched with <span className="text-white">{partnerName}</span> at {matchTime}. Tap to open
-        your direct WhatsApp link.
+      <p suppressHydrationWarning>
+        {t("matchedWith", { partnerName, time: matchTime })}
       </p>
       <Link
         href={whatsappHref}
@@ -995,26 +1077,28 @@ function EmptyState({
   venueName: string;
   liveCount: number;
 }) {
+  const t = useTranslations("app.connect.emptyState");
+  const tCommonActions = useTranslations("common.actions");
   const headline = isPrivate
-    ? "Private mode is on"
+    ? t("privateModeOn")
     : liveCount > 1
-      ? "You’ve got the floor to yourself"
-      : `${venueName} is warming up`;
+      ? t("floorToYourself")
+      : t("venueWarmingUp", { venueName });
 
   const description = isPrivate
-    ? "Only you can see the crowd right now. Send a heart or invite to make yourself visible, or switch privacy off from your profile."
+    ? t("privateDescription")
     : liveCount > 1
-      ? "Everyone else is still signing in. Drop a heart or invite to start the first vibe of the night."
-      : "Be the first to check in. As soon as guests arrive, their cards will queue up in your deck.";
+      ? t("floorDescription")
+      : t("warmingUpDescription");
 
   const tips = isPrivate
     ? [
-        "Hearts surface you immediately for the person you choose.",
-        "Toggle privacy off in your profile when you’re ready to be seen by everyone.",
+        t("privateTip1"),
+        t("privateTip2"),
       ]
     : [
-        "Invite someone IRL to join Social and they’ll appear instantly.",
-        "Keep the app open—new guests slide into the deck the moment they check in.",
+        t("publicTip1"),
+        t("publicTip2"),
       ];
 
   return (
@@ -1029,7 +1113,7 @@ function EmptyState({
         </div>
         <div className="space-y-3 rounded-3xl border border-[#283a64]/60 bg-[#111a33]/60 px-6 py-5 text-left text-xs text-[#a1b0da] sm:text-sm">
           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#8092d6]">
-            Why you don&apos;t see others (yet)
+            {t("whyDontSeeOthers")}
           </p>
           <ul className="space-y-2">
             {tips.map((tip) => (
@@ -1045,13 +1129,13 @@ function EmptyState({
           href="/offers"
             className="rounded-full border border-[#283a64] px-4 py-2 text-[var(--muted)] hover:border-[var(--accent)] hover:text-white"
         >
-          See offers
+          {tCommonActions("seeOffers")}
         </Link>
         <Link
           href="/requests"
             className="rounded-full border border-[#283a64] px-4 py-2 text-[var(--muted)] hover:border-[var(--accent)] hover:text-white"
         >
-          Request a song
+          {tCommonActions("requestSong")}
         </Link>
         </div>
       </div>
@@ -1111,26 +1195,57 @@ function ToastStack({
 }
 
 function FirstVisitTooltip({ onDismiss }: { onDismiss: () => void }) {
+  const t = useTranslations("app.connect.tooltip");
+  const tCommonToasts = useTranslations("common.toasts");
   return (
     <div className="fixed bottom-28 left-1/2 z-[65] w-[min(320px,90vw)] -translate-x-1/2 rounded-2xl border border-[#223253] bg-[#0d162a]/95 px-4 py-3 text-xs text-[var(--muted)] shadow-[0_20px_40px_-25px_rgba(7,10,24,0.9)] backdrop-blur">
       <div className="flex items-start gap-3">
         <span className="text-lg">👆</span>
         <div className="space-y-1 text-left">
-          <p className="text-sm font-semibold text-white">Swipe or tap to connect</p>
+          <p className="text-sm font-semibold text-white">{t("swipeOrTap")}</p>
           <p>
-            Hearts get you noticed. Invites unlock WhatsApp once they accept. Mutual vibes light up
-            the matches tab.
+            {t("heartsGetNoticed")}
           </p>
         </div>
         <button
           type="button"
           onClick={onDismiss}
           className="ml-auto text-lg leading-none text-white/60 transition hover:text-white"
-          aria-label="Dismiss tip"
+          aria-label={tCommonToasts("close")}
         >
           ×
         </button>
       </div>
+    </div>
+  );
+}
+
+function MatchAvatar({
+  avatarUrl,
+  name,
+  initials,
+}: {
+  avatarUrl: string | null;
+  name: string;
+  initials: string;
+}) {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <div className="relative mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border border-[#2f3f6c] bg-[#111a33]">
+      {avatarUrl && !imageError ? (
+        <Image 
+          src={avatarUrl} 
+          alt={name} 
+          fill 
+          className="object-cover" 
+          sizes="80px"
+          unoptimized
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        <span className="text-2xl font-semibold text-white">{initials}</span>
+      )}
     </div>
   );
 }
@@ -1144,13 +1259,38 @@ function MatchCelebration({
   currentProfileName: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("app.connect.celebration");
   const partnerName = match.partner?.display_name ?? "your match";
   const partnerAvatar = match.partner?.avatar_url ?? null;
   const initials = partnerName.slice(0, 1).toUpperCase();
-  const matchTime = new Date(match.created_at ?? 0).toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Format time consistently to avoid hydration mismatches
+  const formatMatchTime = () => {
+    if (!mounted) {
+      // Return ISO string during SSR
+      try {
+        return new Date(match.created_at ?? 0).toISOString();
+      } catch {
+        return "";
+      }
+    }
+    try {
+      return new Date(match.created_at ?? 0).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return "";
+    }
+  };
+
+  const matchTime = formatMatchTime();
   const whatsappHref = match.whatsapp_url ?? "/matches";
   const isExternal = Boolean(match.whatsapp_url);
 
@@ -1158,19 +1298,13 @@ function MatchCelebration({
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-6 backdrop-blur">
       <div className="relative w-full max-w-md overflow-hidden rounded-[36px] border border-[#4336f3]/40 bg-[#080f24]/95 px-8 py-10 text-center shadow-[0_45px_95px_-40px_rgba(5,8,30,0.95)]">
         <ConfettiBurst />
-        <div className="relative mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border border-[#2f3f6c] bg-[#111a33]">
-          {partnerAvatar ? (
-            <Image src={partnerAvatar} alt={partnerName} fill className="object-cover" sizes="80px" />
-          ) : (
-            <span className="text-2xl font-semibold text-white">{initials}</span>
-          )}
-        </div>
-        <p className="mt-4 text-xs uppercase tracking-[0.35em] text-[#9db3ff]">Mutual match</p>
+        <MatchAvatar avatarUrl={partnerAvatar} name={partnerName} initials={initials} />
+        <p className="mt-4 text-xs uppercase tracking-[0.35em] text-[#9db3ff]">{t("mutualMatch")}</p>
         <h2 className="mt-3 text-3xl font-semibold text-white">
           {currentProfileName} × {partnerName}
         </h2>
-        <p className="mt-3 text-sm text-[var(--muted)]">
-          You both said yes at {matchTime}. Keep the vibe going in WhatsApp.
+        <p className="mt-3 text-sm text-[var(--muted)]" suppressHydrationWarning>
+          {t("bothSaidYes", { time: matchTime })}
         </p>
         <div className="mt-6 space-y-3">
           <Link
@@ -1179,13 +1313,13 @@ function MatchCelebration({
             rel={isExternal ? "noopener noreferrer" : undefined}
             className="block rounded-full bg-[#4336f3] px-5 py-3 text-sm font-semibold uppercase tracking-[0.25em] text-white transition hover:bg-[#5448ff]"
           >
-            Open WhatsApp
+            {t("openWhatsApp")}
           </Link>
           <Link
             href="/matches"
             className="block rounded-full border border-[#2f3f6c] px-5 py-3 text-sm font-semibold uppercase tracking-[0.25em] text-[#9db3ff] hover:border-[#9db3ff]"
           >
-            View full match
+            {t("viewFullMatch")}
           </Link>
         </div>
         <button
@@ -1193,7 +1327,7 @@ function MatchCelebration({
           onClick={onClose}
           className="mt-6 text-xs font-semibold uppercase tracking-[0.3em] text-[#6f7bb0] transition hover:text-white"
         >
-          Close
+          {t("close")}
         </button>
       </div>
     </div>
@@ -1236,32 +1370,30 @@ function ConfettiBurst() {
 }
 
 function Coachmark({ onDismiss }: { onDismiss: () => void }) {
+  const t = useTranslations("app.connect.coachmark");
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 p-6 backdrop-blur">
       <div className="w-full max-w-sm space-y-4 rounded-3xl border border-[#273763] bg-[#0b1224] p-6 text-sm text-[var(--muted)]">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#6f7bb0]">How Social works</p>
-          <h2 className="text-lg font-semibold text-white">Connect & match</h2>
+          <p className="text-xs uppercase tracking-[0.3em] text-[#6f7bb0]">{t("howSocialWorks")}</p>
+          <h2 className="text-lg font-semibold text-white">{t("connectMatch")}</h2>
         </div>
         <ul className="space-y-3 text-left">
           <li>
-            <span className="font-semibold text-white">✨ Send vibe</span> to connect with someone who
-            catches your eye.
+            <span className="font-semibold text-white">{t("sendVibe")}</span> {t("sendVibeDescription")}
           </li>
           <li>
-            <span className="font-semibold text-white">🔔 They get notified</span> and can accept
-            or pass in the Matches tab.
+            <span className="font-semibold text-white">{t("theyGetNotified")}</span> {t("theyGetNotifiedDescription")}
           </li>
           <li>
-            <span className="font-semibold text-white">💬 Match unlocked!</span> When both of you send
-            vibes, you get WhatsApp chat access—no awkward number exchanges.
+            <span className="font-semibold text-white">{t("matchUnlocked")}</span> {t("matchUnlockedDescription")}
           </li>
         </ul>
         <button
           onClick={onDismiss}
           className="w-full rounded-full bg-white/10 py-2 text-sm font-semibold text-white hover:bg-white/20"
         >
-          Let&apos;s vibe
+          {t("letsVibe")}
         </button>
       </div>
     </div>

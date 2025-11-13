@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
-import { SocialWordmark } from "@/components/brand/social-wordmark";
+import {useLocale, useTranslations} from "next-intl";
+import {useRouter} from "next/navigation";
+import {useState} from "react";
+
+import {Link} from "@/i18n";
+import {LanguageToggle} from "@/components/global/language-toggle";
+import {SocialWordmark} from "@/components/brand/social-wordmark";
 
 type Venue = {
   id: string;
@@ -21,14 +24,21 @@ type LandingPageProps = {
 
 export function LandingPage({ venues }: LandingPageProps) {
   const router = useRouter();
+  const locale = useLocale();
   const [selectedVenue, setSelectedVenue] = useState<string>("");
   const [showQrInstructions, setShowQrInstructions] = useState(false);
+  const tHeadline = useTranslations("landing.headline");
+  const tVenueSelector = useTranslations("landing.venueSelector");
+  const tQr = useTranslations("landing.qrSection");
+  const tActions = useTranslations("common.actions");
+  const tMessages = useTranslations("common.messages");
+  const tLinks = useTranslations("common.links");
 
   const handleContinue = () => {
     if (!selectedVenue) return;
     
     // Redirect to sign-in with venue parameter
-    router.push(`/sign-in?venue=${selectedVenue}`);
+    router.push(`/${locale}/sign-in?venue=${selectedVenue}`);
   };
 
   const selectedVenueData = venues.find((v) => v.id === selectedVenue);
@@ -43,23 +53,23 @@ export function LandingPage({ venues }: LandingPageProps) {
               onClick={() => setShowQrInstructions(false)}
               className="rounded-full border border-white/30 bg-black/60 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black/80"
             >
-              Close
+              {tActions("close")}
             </button>
           </div>
           <div className="w-full max-w-md space-y-6 rounded-3xl border border-white/10 bg-[#0a1024]/95 p-8 text-center shadow-2xl shadow-black/40">
             <SocialWordmark className="justify-center text-white" />
             <div className="space-y-3">
-              <h2 className="text-2xl font-bold text-white">Scan with your phone</h2>
+              <h2 className="text-2xl font-bold text-white">{tQr("modalTitle")}</h2>
               <p className="text-sm text-[var(--muted)]">
-                Use your phone&apos;s camera or any QR scanner app to scan the code displayed at the venue. The link will open Social and take you straight to the correct sign-in page.
+                {tQr("modalDescription")}
               </p>
             </div>
             <div className="rounded-2xl border border-dashed border-white/20 bg-[#101b33] px-4 py-6 text-sm text-[var(--muted)]">
-              <p className="font-semibold text-white">Quick tips</p>
+              <p className="font-semibold text-white">{tQr("quickTips")}</p>
               <ul className="mt-3 space-y-2 text-left text-xs text-white/70">
-                <li>• Turn up screen brightness on shared displays for faster scans.</li>
-                <li>• If the link opens in a browser, follow the prompts to sign in.</li>
-                <li>• Need help? Ask venue staff to guide you.</li>
+                <li>{`\u2022 ${tQr("tipBrightness")}`}</li>
+                <li>{`\u2022 ${tQr("tipBrowser")}`}</li>
+                <li>{`\u2022 ${tQr("tipHelp")}`}</li>
               </ul>
             </div>
           </div>
@@ -69,8 +79,9 @@ export function LandingPage({ venues }: LandingPageProps) {
       <div className="min-h-screen bg-[var(--background)] text-white">
       {/* Header */}
       <header className="border-b border-white/5 bg-[rgba(10,16,36,0.9)] px-6 py-6 backdrop-blur-lg">
-        <div className="mx-auto max-w-2xl">
-          <SocialWordmark className="text-center tracking-[0.6em]" />
+        <div className="mx-auto flex max-w-2xl items-center justify-center gap-4">
+          <SocialWordmark className="flex-1 text-center tracking-[0.6em]" />
+          <LanguageToggle className="shrink-0" />
         </div>
       </header>
 
@@ -80,10 +91,10 @@ export function LandingPage({ venues }: LandingPageProps) {
           {/* Welcome Section */}
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold leading-tight">
-              Welcome to Social
+              {tHeadline("title")}
             </h1>
             <p className="text-lg text-[var(--muted)]">
-              Connect with people at your venue tonight
+              {tHeadline("subtitle")}
             </p>
           </div>
 
@@ -91,9 +102,9 @@ export function LandingPage({ venues }: LandingPageProps) {
           <div className="rounded-3xl border border-[#223253] bg-[#0d162a] p-8 shadow-lg shadow-black/25">
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-semibold mb-2">Select Your Venue</h2>
+                <h2 className="text-xl font-semibold mb-2">{tVenueSelector("title")}</h2>
                 <p className="text-sm text-[var(--muted)]">
-                  Choose the location where you&apos;re at tonight
+                  {tVenueSelector("subtitle")}
                 </p>
               </div>
 
@@ -147,7 +158,7 @@ export function LandingPage({ venues }: LandingPageProps) {
                 <div className="rounded-2xl border border-dashed border-[#2e3a5d] bg-[#101b33] p-8 text-center">
                   <div className="mb-3 text-4xl">🏢</div>
                   <p className="text-sm text-[var(--muted)]">
-                    No venues available at the moment.
+                    {tMessages("noVenues")}
                   </p>
                 </div>
               )}
@@ -157,7 +168,7 @@ export function LandingPage({ venues }: LandingPageProps) {
                   onClick={handleContinue}
                   className="w-full rounded-2xl bg-[var(--accent)] px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.2em] text-white transition hover:bg-[var(--accent-strong)]"
                 >
-                  Continue to Sign In
+                  {tVenueSelector("button")}
                 </button>
               )}
             </div>
@@ -166,18 +177,18 @@ export function LandingPage({ venues }: LandingPageProps) {
           {/* QR Code Scanner Section */}
           <div className="rounded-3xl border border-[#223253] bg-[#0d162a] p-8 shadow-lg shadow-black/25">
             <div className="space-y-4 text-center">
-              <h2 className="mb-2 text-xl font-semibold">Have a QR Code?</h2>
+              <h2 className="mb-2 text-xl font-semibold">{tQr("title")}</h2>
               <p className="text-sm text-[var(--muted)]">
-                Tap below to learn how to scan the QR code at your venue
+                {tQr("subtitle")}
               </p>
               <button
                 onClick={() => setShowQrInstructions(true)}
                 className="w-full rounded-2xl border border-[#223253] bg-[#101b33] px-6 py-4 text-center text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:border-[var(--accent)] hover:bg-[#0d162a]"
               >
-                Scan QR Instructions
+                {tQr("openButton")}
               </button>
               <p className="text-xs text-[var(--muted)]">
-                Most phones open the correct page automatically when the QR is scanned.
+                {tQr("footer")}
               </p>
             </div>
           </div>
@@ -188,7 +199,7 @@ export function LandingPage({ venues }: LandingPageProps) {
               href="/sign-in/admin"
               className="text-sm text-[var(--muted)] underline decoration-dotted underline-offset-4 transition hover:text-white"
             >
-              Venue staff? Sign in here
+              {tLinks("adminSignIn")}
             </Link>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 type RangeKey = "12h" | "24h" | "7d";
 
@@ -13,17 +14,18 @@ type AttendanceChartProps = {
   seriesByRange: Record<RangeKey, SeriesPoint[]>;
 };
 
-const RANGE_LABELS: Record<RangeKey, string> = {
-  "12h": "Last 12 hours",
-  "24h": "Last 24 hours",
-  "7d": "Last 7 days",
-};
-
 export function AttendanceChart({ seriesByRange }: AttendanceChartProps) {
+  const t = useTranslations("admin.dashboard.chart");
   const [range, setRange] = useState<RangeKey>("12h");
 
   const data = seriesByRange[range];
   const hasData = data && data.some((point) => point.value > 0);
+
+  const RANGE_LABELS: Record<RangeKey, string> = {
+    "12h": t("ranges.12h"),
+    "24h": t("ranges.24h"),
+    "7d": t("ranges.7d"),
+  };
 
   const chartPath = useMemo(() => {
     if (!hasData || data.length === 0) return "";
@@ -58,9 +60,9 @@ export function AttendanceChart({ seriesByRange }: AttendanceChartProps) {
     <div className="space-y-4 rounded-3xl border border-[#1f2c49] bg-[#0d162a]/80 p-6 shadow-lg shadow-black/25">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-white">Attendance trend</h2>
+          <h2 className="text-lg font-semibold text-white">{t("title")}</h2>
           <p className="text-xs text-[var(--muted)]">
-            Track check-ins over selectable windows to understand your busiest times.
+            {t("description")}
           </p>
         </div>
         <div className="flex rounded-2xl border border-[#1f2c49] bg-[#0b1323] p-1 text-xs">
@@ -144,7 +146,7 @@ export function AttendanceChart({ seriesByRange }: AttendanceChartProps) {
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-[#26314d] bg-[#0b1323] px-6 py-10 text-center text-sm text-[var(--muted)]">
-          No attendance data for this range yet.
+          {t("emptyState")}
         </div>
       )}
     </div>

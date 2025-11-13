@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -89,6 +90,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 function InstallBanner() {
   const { isInstallable, install, dismiss, hasInstalled } = usePWA();
   const [collapsed, setCollapsed] = useState(false);
+  const t = useTranslations("common.pwa");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -115,7 +117,7 @@ function InstallBanner() {
         type="button"
         className="fixed bottom-[calc(80px+env(safe-area-inset-bottom,0))] left-6 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-[#223253] bg-[#0d162a] text-2xl text-white shadow-[0_12px_30px_-18px_rgba(0,0,0,0.65)] transition hover:border-[#2f9b7a] hover:scale-110 md:bottom-6"
         onClick={() => setCollapsed(false)}
-        aria-label="Show install prompt"
+        aria-label={t("showPrompt")}
       >
         📱
       </button>
@@ -133,16 +135,16 @@ function InstallBanner() {
           📱
         </div>
         <div className="flex-1 space-y-1 text-sm text-white">
-          <p className="font-semibold">Add Social to your home screen</p>
+          <p className="font-semibold">{t("title")}</p>
           <p className="text-xs text-[var(--muted)]">
-            Install the app for full-screen access and quicker re-entry into the venue.
+            {t("description")}
           </p>
         </div>
         <button
           type="button"
           onClick={() => setCollapsed(true)}
           className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#223253] text-sm text-[var(--muted)] transition hover:text-white"
-          aria-label="Minimize install prompt"
+          aria-label={t("minimizePrompt")}
         >
           –
         </button>
@@ -155,14 +157,14 @@ function InstallBanner() {
             setCollapsed(true);
           }}
         >
-          Later
+          {t("later")}
         </button>
         <button
           type="button"
           className="rounded-xl border border-[#2f9b7a] px-3 py-1 uppercase tracking-[0.2em] text-[#5ef1b5] transition hover:text-white"
           onClick={install}
         >
-          Install
+          {t("install")}
         </button>
       </div>
     </div>

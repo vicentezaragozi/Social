@@ -1,13 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useEffect } from "react";
 import { useFormStatus } from "react-dom";
-import { adminSignInAction, type AdminSignInState } from "@/app/(auth)/sign-in/admin/actions";
+import { useTranslations } from "next-intl";
+import { adminSignInAction, type AdminSignInState } from "@/app/[locale]/(auth)/sign-in/admin/actions";
+import { useFormStatePreservation } from "@/hooks/use-form-state-preservation";
 
 const initialState: AdminSignInState = {};
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const t = useTranslations("auth.adminSignIn.form");
 
   return (
     <button
@@ -37,10 +40,10 @@ function SubmitButton() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          Signing in...
+          {t("submitting")}
         </>
       ) : (
-        "Sign in as Admin"
+        t("submit")
       )}
     </button>
   );
@@ -48,15 +51,31 @@ function SubmitButton() {
 
 export function AdminSignInForm() {
   const [state, formAction] = useActionState(adminSignInAction, initialState);
+  const t = useTranslations("auth.adminSignIn.form");
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Form state preservation across locale changes
+  const { clearSavedState } = useFormStatePreservation(
+    "admin-sign-in-form",
+    null,
+    null,
+    { formRef }
+  );
+
+  useEffect(() => {
+    if (state.success) {
+      clearSavedState();
+    }
+  }, [state.success, clearSavedState]);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form ref={formRef} action={formAction} className="space-y-4">
       <div className="space-y-2">
         <label
           htmlFor="email"
           className="block text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]"
         >
-          Email
+          {t("email")}
         </label>
         <input
           id="email"
@@ -65,7 +84,7 @@ export function AdminSignInForm() {
           autoComplete="email"
           required
           className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-base text-white placeholder-[var(--muted)] transition-colors focus:border-[#3d4f7f] focus:outline-none focus:ring-2 focus:ring-[#3d4f7f]/30"
-          placeholder="admin@venue.com"
+          placeholder={t("emailPlaceholder")}
         />
       </div>
 
@@ -74,7 +93,7 @@ export function AdminSignInForm() {
           htmlFor="password"
           className="block text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]"
         >
-          Password
+          {t("password")}
         </label>
         <input
           id="password"
@@ -83,7 +102,7 @@ export function AdminSignInForm() {
           autoComplete="current-password"
           required
           className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-base text-white placeholder-[var(--muted)] transition-colors focus:border-[#3d4f7f] focus:outline-none focus:ring-2 focus:ring-[#3d4f7f]/30"
-          placeholder="••••••••"
+          placeholder={t("passwordPlaceholder")}
         />
       </div>
 

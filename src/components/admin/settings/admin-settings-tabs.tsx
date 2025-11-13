@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 
 import {
   activateSessionAction,
@@ -12,7 +13,7 @@ import {
   type SessionSettingsState,
   type SessionToggleState,
   type VenueSettingsState,
-} from "@/app/admin/settings/actions";
+} from "@/app/[locale]/admin/settings/actions";
 import { MAX_GALLERY_ITEMS } from "@/components/admin/settings/constants";
 import { SocialWordmark } from "@/components/brand/social-wordmark";
 import { toDataURL } from "qrcode";
@@ -53,13 +54,19 @@ type AdminSettingsTabsProps = {
 
 function FormSubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
+  const tVenue = useTranslations("admin.settings.venue.actions");
+  const tSession = useTranslations("admin.settings.session.actions");
+  // Determine which translation to use based on label
+  const savingText = label.includes("venue") || label.includes("Venue") 
+    ? tVenue("saving") 
+    : tSession("saving");
   return (
     <button
       type="submit"
       disabled={pending}
       className="rounded-2xl bg-gradient-to-r from-[#6b9eff] to-[#4a7fd9] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? "Saving…" : label}
+      {pending ? savingText : label}
     </button>
   );
 }
@@ -82,6 +89,7 @@ function ErrorNotice({ message }: { message: string }) {
 
 export function AdminSettingsTabs({ venue, session }: AdminSettingsTabsProps) {
   const [activeTab, setActiveTab] = useState<"venue" | "session">("venue");
+  const t = useTranslations("admin.settings.tabs");
 
   return (
     <div className="space-y-6">
@@ -95,7 +103,7 @@ export function AdminSettingsTabs({ venue, session }: AdminSettingsTabsProps) {
               : "text-[var(--muted)] hover:text-white"
           }`}
         >
-          Venue customization
+          {t("venueCustomization")}
         </button>
         <button
           type="button"
@@ -106,7 +114,7 @@ export function AdminSettingsTabs({ venue, session }: AdminSettingsTabsProps) {
               : "text-[var(--muted)] hover:text-white"
           }`}
         >
-          Session configuration
+          {t("sessionConfiguration")}
         </button>
       </div>
 
@@ -130,6 +138,11 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
   const [qrError, setQrError] = useState<string | null>(null);
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
   const [showFullscreenQr, setShowFullscreenQr] = useState(false);
+  const t = useTranslations("admin.settings.venue");
+  const tFields = useTranslations("admin.settings.venue.fields");
+  const tQr = useTranslations("admin.settings.venue.qr");
+  const tActions = useTranslations("admin.settings.venue.actions");
+  const tMessages = useTranslations("admin.settings.venue.messages");
 
   useEffect(() => {
     if (state.success) {
@@ -159,7 +172,7 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
 
   const generateQr = useCallback(async (): Promise<string | null> => {
     if (!signInUrl) {
-      setQrError("Venue link is unavailable. Save venue details and refresh the page.");
+      setQrError(tQr("venueLinkUnavailable"));
       return null;
     }
 
@@ -179,7 +192,7 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
       return dataUrl;
     } catch (error) {
       console.error("Failed to generate QR code", error);
-      setQrError("Unable to generate the QR code. Please try again.");
+      setQrError(tQr("qrError"));
       return null;
     } finally {
       setIsGeneratingQr(false);
@@ -233,9 +246,9 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
           <div className="w-full max-w-3xl space-y-6 rounded-3xl border border-white/10 bg-[#0a1024]/95 p-10 text-center shadow-2xl shadow-black/40">
             <SocialWordmark className="justify-center text-white" />
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold text-white">Scan to join {venue.name}</h2>
+              <h2 className="text-3xl font-bold text-white">{tQr("scanTitle", { venueName: venue.name })}</h2>
               <p className="text-sm text-[var(--muted)]">
-                Point your camera at the QR code below to open Social and jump straight into {venue.name}.
+                {tQr("scanDescription", { venueName: venue.name })}
               </p>
             </div>
             <div className="mx-auto flex h-72 w-72 items-center justify-center rounded-3xl border border-white/20 bg-white p-6">
@@ -243,7 +256,7 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
             </div>
             {signInUrl ? (
               <p className="text-xs text-white/60">
-                Or visit{" "}
+                {tQr("orVisit")}{" "}
                 <span className="break-all font-semibold text-white">
                   {signInUrl}
                 </span>
@@ -255,14 +268,14 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
 
       <div className="space-y-6 rounded-3xl border border-[#1f2c49] bg-[#0d162a]/80 p-8 shadow-lg shadow-black/30">
         <div>
-        <h2 className="text-2xl font-semibold text-white">Venue customization</h2>
+        <h2 className="text-2xl font-semibold text-white">{t("title")}</h2>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Update guest-facing details, upload gallery shots, and manage your contact info.
+          {t("description")}
         </p>
       </div>
 
       {state.error && <ErrorNotice message={state.error} />}
-      {state.success && <SuccessNotice message="Venue settings saved." />}
+      {state.success && <SuccessNotice message={tMessages("saved")} />}
 
       <form action={formAction} className="space-y-6">
         <input type="hidden" name="venueId" value={venue.id} />
@@ -271,7 +284,7 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Venue name *
+              {tFields("venueName")} *
             </label>
             <input
               name="venueName"
@@ -283,14 +296,14 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
 
           <div className="space-y-2">
             <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Capacity
+              {tFields("capacity")}
             </label>
             <input
               type="number"
               name="capacity"
               min={0}
               defaultValue={venue.capacity ?? ""}
-              placeholder="e.g., 200"
+              placeholder={tFields("capacityPlaceholder")}
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
             />
           </div>
@@ -298,13 +311,13 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
 
         <div className="space-y-2">
           <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-            Description
+            {tFields("description")}
           </label>
           <textarea
             name="description"
             rows={4}
             defaultValue={venue.description ?? ""}
-            placeholder="Tell guests about your vibe..."
+            placeholder={tFields("descriptionPlaceholder")}
             className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
           />
         </div>
@@ -312,24 +325,24 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Address
+              {tFields("address")}
             </label>
             <input
               name="address"
               defaultValue={venue.address ?? ""}
-              placeholder="123 Main St, City"
+              placeholder={tFields("addressPlaceholder")}
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Website
+              {tFields("website")}
             </label>
             <input
               name="websiteUrl"
               defaultValue={venue.website_url ?? ""}
-              placeholder="https://"
+              placeholder={tFields("websitePlaceholder")}
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
             />
           </div>
@@ -338,23 +351,23 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Instagram
+              {tFields("instagram")}
             </label>
             <input
               name="instagramHandle"
               defaultValue={venue.instagram_handle ?? ""}
-              placeholder="@yoursocialclub"
+              placeholder={tFields("instagramPlaceholder")}
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Phone number
+              {tFields("phoneNumber")}
             </label>
             <input
               name="phoneNumber"
               defaultValue={venue.phone_number ?? ""}
-              placeholder="+1 555 555 5555"
+              placeholder={tFields("phonePlaceholder")}
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
             />
           </div>
@@ -362,26 +375,26 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
 
         <div className="space-y-2">
           <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-            Amenities (comma separated)
+            {tFields("amenities")}
           </label>
           <input
             name="amenities"
             defaultValue={amenitiesValue}
-            placeholder="WiFi, Outdoor seating, VIP lounge"
+            placeholder={tFields("amenitiesPlaceholder")}
             className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
           />
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           <FileUploadField
-            label="Venue logo"
+            label={tFields("venueLogo")}
             name="logo"
-            description="Upload a square logo for guest lists and QR pages."
+            description={tFields("logoDescription")}
           />
           <FileUploadField
-            label="Cover image"
+            label={tFields("coverImage")}
             name="coverImage"
-            description="Panoramic photo used for onboarding and settings previews."
+            description={tFields("coverDescription")}
           />
         </div>
 
@@ -391,8 +404,8 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
               <Image src={venue.logo_url} alt="Venue logo" fill className="object-cover" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">Current logo</p>
-              <p className="text-xs text-[var(--muted)]">Upload a new file to replace it.</p>
+              <p className="text-sm font-semibold text-white">{tFields("currentLogo")}</p>
+              <p className="text-xs text-[var(--muted)]">{tFields("replaceLogo")}</p>
             </div>
           </div>
         ) : null}
@@ -400,13 +413,13 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">Venue gallery</h3>
+              <h3 className="text-lg font-semibold text-white">{tFields("venueGallery")}</h3>
               <p className="text-xs text-[var(--muted)]">
-                Share up to {MAX_GALLERY_ITEMS} highlights. Guests will see these on the landing page.
+                {tFields("galleryDescription", { max: MAX_GALLERY_ITEMS })}
               </p>
             </div>
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-dashed border-white/20 px-4 py-2 text-sm text-[var(--muted)] transition hover:border-white/40 hover:text-white">
-              Upload images
+              {tFields("uploadImages")}
               <input type="file" name="galleryFiles" accept="image/*" multiple className="hidden" />
             </label>
           </div>
@@ -426,28 +439,28 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
                     onClick={() => handleRemoveGallery(url)}
                     className="absolute right-3 top-3 rounded-full bg-black/70 px-3 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"
                   >
-                    Remove
+                    {tFields("remove")}
                   </button>
                 </div>
               ))}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 px-6 py-10 text-center text-sm text-[var(--muted)]">
-              <p>No gallery images yet. Upload some to showcase your venue.</p>
+              <p>{tFields("noGalleryImages")}</p>
             </div>
           )}
         </div>
 
         <div className="flex justify-end">
-          <FormSubmitButton label="Save venue settings" />
+          <FormSubmitButton label={tActions("save")} />
         </div>
       </form>
         <div className="space-y-4 rounded-2xl border border-[#1a3a5a] bg-[#0f1f33] p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">Venue QR code</h3>
+              <h3 className="text-lg font-semibold text-white">{tQr("title")}</h3>
               <p className="text-xs text-[var(--muted)]">
-                Generate a QR code guests can scan to open your venue&apos;s sign-in page instantly.
+                {tQr("description")}
               </p>
             </div>
           <button
@@ -458,7 +471,7 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
             disabled={isGeneratingQr || !signInUrl}
               className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#6b9eff] to-[#4a7fd9] px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isGeneratingQr ? "Generating…" : qrDataUrl ? "Regenerate QR" : "Generate QR"}
+              {isGeneratingQr ? tQr("generating") : qrDataUrl ? tQr("regenerate") : tQr("generate")}
             </button>
           </div>
           {qrError ? <ErrorNotice message={qrError} /> : null}
@@ -472,7 +485,7 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
                 />
               ) : (
                 <div className="text-center text-xs text-[var(--muted)]">
-                  Generate a QR code to preview it here.
+                  {tQr("preview")}
                 </div>
               )}
             </div>
@@ -483,7 +496,7 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
                 disabled={!qrDataUrl}
                 className="inline-flex items-center justify-center rounded-2xl border border-[#1f2c49] bg-[#0a1024] px-5 py-3 text-sm font-semibold text-white transition hover:border-[#345088] hover:bg-[#101c36] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Download QR code
+                {tQr("download")}
               </button>
               <button
                 type="button"
@@ -493,12 +506,12 @@ function VenueSettingsPanel({ venue }: { venue: VenueDetails }) {
                 disabled={(!qrDataUrl && !signInUrl) || isGeneratingQr}
                 className="inline-flex items-center justify-center rounded-2xl bg-[#1a2a48] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#24365f] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Display QR in full screen
+                {tQr("displayFullscreen")}
               </button>
               <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-xs text-[var(--muted)]">
-                <p className="font-semibold text-white/80">Sign-in link</p>
+                <p className="font-semibold text-white/80">{tQr("signInLink")}</p>
                 <p className="mt-1 break-all">
-                  {signInUrl || "Unavailable — refresh after saving venue settings."}
+                  {signInUrl || tQr("unavailable")}
                 </p>
               </div>
             </div>
@@ -556,6 +569,13 @@ function SessionSettingsPanel({
   const [entryFeeCurrency, setEntryFeeCurrency] = useState(
     session?.entry_fee_currency ?? "USD",
   );
+  const t = useTranslations("admin.settings.session");
+  const tFields = useTranslations("admin.settings.session.fields");
+  const tDuration = useTranslations("admin.settings.session.durationOptions");
+  const tTypes = useTranslations("admin.settings.session.sessionTypes");
+  const tInfo = useTranslations("admin.settings.session.infoBox");
+  const tActions = useTranslations("admin.settings.session.actions");
+  const tMessages = useTranslations("admin.settings.session.messages");
 
   useEffect(() => {
     if (state.success) {
@@ -564,17 +584,17 @@ function SessionSettingsPanel({
   }, [state.success]);
 
   const durationOptions = [
-    { value: 1, label: "1 hour" },
-    { value: 2, label: "2 hours" },
-    { value: 3, label: "3 hours" },
-    { value: 4, label: "4 hours" },
-    { value: 6, label: "6 hours" },
-    { value: 8, label: "8 hours" },
-    { value: 12, label: "12 hours" },
-    { value: 24, label: "24 hours (1 day)" },
-    { value: 48, label: "48 hours (2 days)" },
-    { value: 72, label: "72 hours (3 days)" },
-    { value: 168, label: "168 hours (1 week)" },
+    { value: 1, label: tDuration("1") },
+    { value: 2, label: tDuration("2") },
+    { value: 3, label: tDuration("3") },
+    { value: 4, label: tDuration("4") },
+    { value: 6, label: tDuration("6") },
+    { value: 8, label: tDuration("8") },
+    { value: 12, label: tDuration("12") },
+    { value: 24, label: tDuration("24") },
+    { value: 48, label: tDuration("48") },
+    { value: 72, label: tDuration("72") },
+    { value: 168, label: tDuration("168") },
   ];
 
   const entryFeeValue = useMemo(() => {
@@ -587,15 +607,14 @@ function SessionSettingsPanel({
   return (
     <div className="space-y-6 rounded-3xl border border-[#1f2c49] bg-[#0d162a]/80 p-8 shadow-lg shadow-black/30">
       <div>
-        <h2 className="text-2xl font-semibold text-white">Session configuration</h2>
+        <h2 className="text-2xl font-semibold text-white">{t("title")}</h2>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Session duration controls how long guests can stay connected. After the timer ends, all
-          guests are returned to the landing page.
+          {t("description")}
         </p>
       </div>
 
       {state.error && <ErrorNotice message={state.error} />}
-      {state.success && <SuccessNotice message="Session settings saved." />}
+      {state.success && <SuccessNotice message={tMessages("saved")} />}
 
       <form action={formAction} className="space-y-6">
         <input type="hidden" name="venueId" value={venueId} />
@@ -603,26 +622,26 @@ function SessionSettingsPanel({
 
         <div className="space-y-2">
           <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-            Session name *
+            {tFields("sessionName")} *
           </label>
           <input
             name="sessionName"
             required
             defaultValue={session?.session_name ?? ""}
-            placeholder="Friday Night Vibes"
+            placeholder={tFields("sessionNamePlaceholder")}
             className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
           />
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-            Session description
+            {tFields("sessionDescription")}
           </label>
           <textarea
             name="sessionDescription"
             rows={4}
             defaultValue={session?.session_description ?? ""}
-            placeholder="Highlight DJs, drink specials, or anything else guests should know."
+            placeholder={tFields("sessionDescriptionPlaceholder")}
             className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
           />
         </div>
@@ -630,7 +649,7 @@ function SessionSettingsPanel({
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Duration *
+              {tFields("duration")} *
             </label>
             <select
               name="durationHours"
@@ -645,23 +664,23 @@ function SessionSettingsPanel({
               ))}
             </select>
             <p className="text-xs text-[var(--muted)]">
-              Minimum 1 hour, maximum 1 week. Guests will be signed out when this timer hits zero.
+              {tFields("durationHelp")}
             </p>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Session type
+              {tFields("sessionType")}
             </label>
             <select
               name="sessionType"
               defaultValue={session?.session_type ?? "event"}
               className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
             >
-              <option value="event">Special event</option>
-              <option value="daily">Daily session</option>
-              <option value="weekly">Weekly session</option>
-              <option value="custom">Custom</option>
+              <option value="event">{tTypes("event")}</option>
+              <option value="daily">{tTypes("daily")}</option>
+              <option value="weekly">{tTypes("weekly")}</option>
+              <option value="custom">{tTypes("custom")}</option>
             </select>
           </div>
         </div>
@@ -669,7 +688,7 @@ function SessionSettingsPanel({
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Entry fee
+              {tFields("entryFee")}
             </label>
             <div className="flex gap-3">
               <input
@@ -678,7 +697,7 @@ function SessionSettingsPanel({
                 min="0"
                 step="0.01"
                 defaultValue={entryFeeValue}
-                placeholder="0.00"
+                placeholder={tFields("entryFeePlaceholder")}
                 className="w-full rounded-2xl border border-[#233050] bg-[#0a1024] px-5 py-4 text-white transition-colors focus:border-[#6b9eff] focus:outline-none focus:ring-2 focus:ring-[#6b9eff]/30"
               />
               <select
@@ -694,24 +713,24 @@ function SessionSettingsPanel({
               </select>
             </div>
             <p className="text-xs text-[var(--muted)]">
-              Leave blank if the session is free for guests.
+              {tFields("entryFeeHelp")}
             </p>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium uppercase tracking-[0.15em] text-[var(--muted)]">
-              Status
+              {tFields("status")}
             </label>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-white">
               {session?.is_active
-                ? "Active — guests are currently connected."
-                : "Inactive — activate to let guests join."}
+                ? tFields("statusActive")
+                : tFields("statusInactive")}
             </div>
           </div>
         </div>
 
         <div className="mt-6 flex justify-end">
-          <FormSubmitButton label="Save session settings" />
+          <FormSubmitButton label={tActions("save")} />
         </div>
       </form>
 
@@ -731,7 +750,7 @@ function SessionSettingsPanel({
                   : "w-full rounded-2xl bg-[#1a2a48] px-8 py-3 text-sm font-semibold text-white transition hover:bg-[#24365f] sm:w-auto"
               }
             >
-              {session.is_active ? "Deactivate session" : "Activate session"}
+              {session.is_active ? tActions("deactivate") : tActions("activate")}
             </button>
           </form>
           <SessionToggleMessages
@@ -743,11 +762,11 @@ function SessionSettingsPanel({
       ) : null}
 
       <div className="rounded-2xl border border-[#1a3a5a] bg-[#0f1f33] p-6 text-sm text-[var(--muted)]">
-        <h3 className="mb-2 text-base font-semibold text-[#6b9eff]">How session timing works</h3>
+        <h3 className="mb-2 text-base font-semibold text-[#6b9eff]">{tInfo("title")}</h3>
         <ul className="space-y-2">
-          <li>• Guests can only log in during an active session.</li>
-          <li>• When the timer reaches zero, guests are redirected to the landing page.</li>
-          <li>• QR codes and manual venue selection are blocked until a session is active again.</li>
+          <li>• {tInfo("points.1")}</li>
+          <li>• {tInfo("points.2")}</li>
+          <li>• {tInfo("points.3")}</li>
         </ul>
       </div>
     </div>
@@ -763,17 +782,18 @@ function SessionToggleMessages({
   activateState: SessionToggleState;
   deactivateState: SessionToggleState;
 }) {
+  const tMessages = useTranslations("admin.settings.session.messages");
   return (
     <div className="flex-1 space-y-2">
       {isActive ? (
         <>
           {deactivateState.error && <ErrorNotice message={deactivateState.error} />}
-          {deactivateState.success && <SuccessNotice message="Session deactivated." />}
+          {deactivateState.success && <SuccessNotice message={tMessages("deactivated")} />}
         </>
       ) : (
         <>
           {activateState.error && <ErrorNotice message={activateState.error} />}
-          {activateState.success && <SuccessNotice message="Session activated." />}
+          {activateState.success && <SuccessNotice message={tMessages("activated")} />}
         </>
       )}
     </div>

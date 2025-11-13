@@ -116,8 +116,6 @@ export const ensureActiveVenueSession = async (params: {
     throw new Error("No active session available.");
   }
 
-  console.log("ensureActiveVenueSession: looking up existing session", params);
-
   const { data: existing, error: existingError } = await supabase.rpc(
     "get_active_session",
     {
@@ -131,8 +129,6 @@ export const ensureActiveVenueSession = async (params: {
   }
 
   if (existing && (existing as VenueSessionRow).id) {
-    console.log("ensureActiveVenueSession: reusing session", existing);
-
     await supabase
       .from("profiles")
       .update({ is_deactivated: false, deactivated_at: null })
@@ -140,8 +136,6 @@ export const ensureActiveVenueSession = async (params: {
 
     return existing as VenueSessionRow;
   }
-
-  console.log("ensureActiveVenueSession: creating new session", params);
 
   const { data: inserted, error: insertError } = await supabase.rpc(
     "create_active_session",
@@ -160,8 +154,6 @@ export const ensureActiveVenueSession = async (params: {
     .from("profiles")
     .update({ is_deactivated: false, deactivated_at: null })
     .eq("id", params.profileId);
-
-  console.log("ensureActiveVenueSession: created session", inserted);
 
   return inserted as VenueSessionRow;
 };

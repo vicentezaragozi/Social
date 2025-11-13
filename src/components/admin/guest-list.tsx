@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { Database } from "@/lib/supabase/types";
-import type { UpdateUserState } from "@/app/admin/users/actions";
+import type { UpdateUserState } from "@/app/[locale]/admin/users/actions";
 import { cn } from "@/lib/utils";
 
 type GuestEntry = {
@@ -13,13 +14,6 @@ type GuestEntry = {
 
 const initialState: UpdateUserState = {};
 
-const DURATION_OPTIONS = [
-  { value: "1h", label: "1 hour" },
-  { value: "24h", label: "24 hours" },
-  { value: "7d", label: "7 days" },
-  { value: "permanent", label: "Permanent" },
-];
-
 function BlockDurationPicker({
   name,
   defaultValue,
@@ -27,9 +21,18 @@ function BlockDurationPicker({
   name: string;
   defaultValue: string;
 }) {
+  const t = useTranslations("admin.users.block.duration");
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(defaultValue);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  
+  const DURATION_OPTIONS = [
+    { value: "1h", label: t("1h") },
+    { value: "24h", label: t("24h") },
+    { value: "7d", label: t("7d") },
+    { value: "permanent", label: t("permanent") },
+  ];
+  
   const selected = DURATION_OPTIONS.find((option) => option.value === value) ?? DURATION_OPTIONS[0];
 
   useEffect(() => {
@@ -107,18 +110,20 @@ export function GuestList({
   ) => Promise<UpdateUserState>;
 }) {
   const [state, formAction] = useActionState(action, initialState);
+  const t = useTranslations("admin.users");
+  const tStatus = useTranslations("admin.users.status");
 
   return (
     <section className="space-y-4">
       <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">Guests</h2>
+          <h2 className="text-xl font-semibold text-white">{t("title")}</h2>
           <p className="text-sm text-[var(--muted)]">
-            Manage who is currently in the venue and block disruptive guests.
+            {t("description")}
           </p>
         </div>
         <span className="rounded-full border border-[#223253] px-3 py-1 text-xs text-[var(--muted)]">
-          {guests.length} profiles
+          {guests.length} {t("profilesCount")}
         </span>
       </header>
 
@@ -129,7 +134,7 @@ export function GuestList({
       ) : null}
       {state.success ? (
         <p className="rounded-2xl border border-[#264b3f] bg-[#122521] px-4 py-2 text-xs text-[#5ef1b5]">
-          Guest status updated.
+          {t("messages.updated")}
         </p>
       ) : null}
 
@@ -140,7 +145,7 @@ export function GuestList({
           );
           const lastSeen = profile.last_seen_at
             ? new Date(profile.last_seen_at).toLocaleString()
-            : "Unknown";
+            : t("messages.unknown");
           const blocked = Boolean(profile.blocked_until);
 
           return (
@@ -155,7 +160,7 @@ export function GuestList({
                   </p>
                   <p className="text-xs text-[var(--muted)]">{lastSeen}</p>
                   {profile.blocked_reason ? (
-                    <p className="text-xs text-[#ff8ba7]">Reason: {profile.blocked_reason}</p>
+                    <p className="text-xs text-[#ff8ba7]">{t("block.reasonLabel")}: {profile.blocked_reason}</p>
                   ) : null}
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -167,15 +172,15 @@ export function GuestList({
                         : "border border-[#70551f] bg-[#241b09] text-[#ffb224]",
                     )}
                   >
-                    {active ? "Active" : "Offline"}
+                    {active ? tStatus("active") : tStatus("offline")}
                   </span>
                   {blocked ? (
                     <span className="rounded-full border border-[#553432] bg-[#241109] px-3 py-1 text-xs font-semibold text-[#ff8ba7]">
-                      Blocked
+                      {tStatus("blocked")}
                     </span>
                   ) : null}
                   <span className="rounded-full border border-[#223253] px-3 py-1 text-xs text-[var(--muted)]">
-                    {profile.is_private ? "Private" : "Public"}
+                    {profile.is_private ? tStatus("private") : tStatus("public")}
                   </span>
                 </div>
               </div>
@@ -190,7 +195,7 @@ export function GuestList({
                       type="submit"
                       className="rounded-xl border border-[#2f9b7a] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5] transition hover:border-[#5ef1b5] hover:text-white"
                     >
-                      Unblock
+                      {t("block.unblock")}
                     </button>
                   </form>
                 ) : (
@@ -202,14 +207,14 @@ export function GuestList({
                     <input
                       type="text"
                       name="reason"
-                      placeholder="Reason"
+                      placeholder={t("block.reasonPlaceholder")}
                       className="flex-1 rounded-xl border border-[#553ed8]/30 bg-[#141830] px-3 py-2 text-xs text-white placeholder:text-[#666d99] transition focus:border-[#6d5dff] focus:outline-none focus:ring-2 focus:ring-[#6d5dff]/40 sm:text-sm"
                     />
                     <button
                       type="submit"
                       className="rounded-xl border border-[#553432] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#ff8ba7] transition hover:border-[#ff8ba7] hover:text-white"
                     >
-                      Block
+                      {t("block.button")}
                     </button>
                   </form>
                 )}

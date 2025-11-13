@@ -1,0 +1,937 @@
+{
+  "common": {
+    "languageToggle": {
+      "englishShort": "ENG",
+      "spanishShort": "ES",
+      "englishLabel": "English",
+      "spanishLabel": "Spanish"
+    },
+    "actions": {
+      "close": "Close",
+      "signOut": "Sign out",
+      "continue": "Continue",
+      "scanQr": "Scan QR Instructions",
+      "back": "Back",
+      "signIn": "Sign in",
+      "viewAll": "View all",
+      "seeOffers": "See offers",
+      "requestSong": "Request a song"
+    },
+    "aria": {
+      "signOut": "Sign out",
+      "profile": "Profile"
+    },
+    "labels": {
+      "adminRole": "Admin",
+      "venue": "Venue"
+    },
+    "links": {
+      "adminSignIn": "Venue staff? Sign in here"
+    },
+    "messages": {
+      "noVenues": "No venues available at the moment."
+    },
+    "status": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "inQueue": "In Queue",
+      "played": "Played \u2728",
+      "declined": "Declined"
+    },
+    "blocked": {
+      "title": "Access temporarily restricted",
+      "description": "Venue staff set a block on your account. You cannot view the guest feed or send vibes until it clears.",
+      "reason": "Reason",
+      "contactStaff": "Contact the staff for more information.",
+      "blockLifts": "Block lifts on {date}.",
+      "blockShouldLift": "Block should be lifted soon. Reload or contact staff if it persists.",
+      "help": "Need help? Show this screen to the venue crew so they can review the block."
+    },
+    "errors": {
+      "generic": "An error occurred. Please try again.",
+      "signInAgain": "You need to sign in again.",
+      "pleaseSignInAgain": "Please sign in again.",
+      "invalidRequest": "Invalid request.",
+      "invalidResponse": "Invalid response.",
+      "invalidMatchId": "Invalid match ID.",
+      "invalidUserId": "Invalid user ID.",
+      "matchNotFound": "Match not found.",
+      "inviteNotFound": "Invite not found or already handled.",
+      "interactionDetails": "Missing or invalid interaction details.",
+      "activeSessionNotFound": "Active session not found. Refresh and try again.",
+      "couldNotSendInteraction": "Could not send interaction. Try again in a moment.",
+      "unableToUpdateInvite": "Unable to update invite. Try again.",
+      "couldNotUnmatch": "Could not unmatch. Try again.",
+      "couldNotBlock": "Could not block user. Try again.",
+      "userAlreadyBlocked": "User is already blocked.",
+      "cannotBlockSelf": "You cannot block yourself.",
+      "onlyUnmatchOwn": "You can only unmatch your own matches.",
+      "unableToSaveOffer": "Unable to save offer right now.",
+      "offerNotFound": "Offer not found.",
+      "offerNotActive": "This offer is no longer active.",
+      "offerNotAvailable": "This offer isn't available yet.",
+      "offerExpired": "This offer has expired.",
+      "addPhoneNumber": "Add your phone number in Profile to send vibes and unlock matching.",
+      "nameRequired": "Name is required.",
+      "displayNameRequired": "Display name is required.",
+      "mustBe18": "You must be 18 or older.",
+      "shareValidLink": "Share a valid link.",
+      "invalidFormInput": "Invalid form input.",
+      "invalidProfileDetails": "Invalid profile details.",
+      "idPhotoRequired": "Please upload a photo of your ID.",
+      "idPhotoTooLarge": "ID photo must be under 5 MB.",
+      "profilePhotoTooLarge": "Profile photo must be under 5 MB.",
+      "galleryPhotoTooLarge": "Gallery photos must be under 5 MB each.",
+      "couldNotUploadId": "Could not upload ID photo. Try again.",
+      "couldNotUploadAvatar": "Could not upload profile photo. Try again.",
+      "couldNotUploadGallery": "Could not upload gallery photo. Try again.",
+      "couldNotLoadProfile": "Could not load your current profile. Try again.",
+      "storageBucketMissing": "Storage bucket '{bucket}' is missing. Ask an admin to create it in Supabase Storage and retry.",
+      "addSongTitle": "Add the song title."
+    },
+    "toasts": {
+      "close": "Close"
+    },
+    "pwa": {
+      "title": "Add Social to your home screen",
+      "description": "Install the app for full-screen access and quicker re-entry into the venue.",
+      "later": "Later",
+      "install": "Install",
+      "showPrompt": "Show install prompt",
+      "minimizePrompt": "Minimize install prompt"
+    }
+  },
+  "appShell": {
+    "nav": {
+      "connect": "Connect",
+      "matches": "Matches",
+      "requests": "Requests",
+      "offers": "Offers",
+      "profile": "Profile"
+    }
+  },
+  "adminShell": {
+    "title": "Venue Dashboard",
+    "goToApp": "Go to App",
+    "nav": {
+      "dashboard": "Dashboard",
+      "guests": "Guests",
+      "songQueue": "Song Queue",
+      "offers": "Offers",
+      "settings": "Settings"
+    }
+  },
+  "landing": {
+    "headline": {
+      "title": "Welcome to Social",
+      "subtitle": "Connect with people at your venue tonight"
+    },
+    "venueSelector": {
+      "title": "Select Your Venue",
+      "subtitle": "Choose the location where you're at tonight",
+      "button": "Continue to Sign In"
+    },
+    "qrSection": {
+      "title": "Have a QR Code?",
+      "subtitle": "Tap below to learn how to scan the QR code at your venue",
+      "footer": "Most phones open the correct page automatically when the QR is scanned.",
+      "openButton": "Scan QR Instructions",
+      "modalTitle": "Scan with your phone",
+      "modalDescription": "Use your phone's camera or any QR scanner app to scan the code displayed at the venue. The link will open Social and take you straight to the correct sign-in page.",
+      "quickTips": "Quick tips",
+      "tipBrightness": "Turn up screen brightness on shared displays for faster scans.",
+      "tipBrowser": "If the link opens in a browser, follow the prompts to sign in.",
+      "tipHelp": "Need help? Ask venue staff to guide you."
+    }
+  },
+  "metadata": {
+    "defaultTitle": "Social \u2014 Nightlife, Connected",
+    "titleTemplate": "%s | Social",
+    "description": "Social is the discreet nightlife companion for venues and their guests. Connect, match, and manage the crowd from a single progressive web experience.",
+    "applicationName": "Social",
+    "appleTitle": "Social",
+    "appleStatusBarStyle": "black-translucent"
+  },
+  "app": {
+    "connect": {
+      "title": "Connect",
+      "header": {
+        "swipeDeck": "Swipe the deck",
+        "swipeInstructions": "Swipe or tap to send vibes. Match when both of you connect → WhatsApp unlocked.",
+        "openingFloor": "You're opening the floor—send vibes to spark connections.",
+        "guest": "guest",
+        "guests": "guests",
+        "live": "live",
+        "socialAt": "Social @ {venueName}"
+      },
+      "buttons": {
+        "sendVibe": "Send vibe",
+        "vibeSent": "Vibe sent ✓",
+        "message": "Message",
+        "sendInvite": "Send invite",
+        "inviteSent": "Invite sent ✓",
+        "accept": "Accept",
+        "decline": "Decline",
+        "pass": "Pass",
+        "viewMatches": "Matches",
+        "viewAll": "View all",
+        "seeOffers": "See offers",
+        "requestSong": "Request a song"
+      },
+      "labels": {
+        "favoriteTrack": "Favorite track",
+        "theyLikedYou": "They already sent you a vibe",
+        "viewMatchDetails": "View match details",
+        "matchOnMutual": "Match on mutual vibe → WhatsApp",
+        "staff": "Staff",
+        "keepingVibeMysterious": "Keeping the vibe mysterious.",
+        "matched": "Matched",
+        "heartSent": "Heart sent"
+      },
+      "toasts": {
+        "newMatchUnlocked": "New match unlocked",
+        "matchDescription": "You and {partnerName} unlocked chat.",
+        "offerSaved": "Offer saved",
+        "offerAlreadySaved": "Offer already saved",
+        "offerSavedDescription": "Show this code at the venue: {promoCode}",
+        "offerSavedGeneric": "Saved to your offers list.",
+        "newInviteIncoming": "New invite incoming",
+        "newHeartReceived": "New heart received",
+        "inviteDescription": "{senderName} invited you to chat.",
+        "heartDescription": "{senderName} sent you a heart.",
+        "openWhatsApp": "Open WhatsApp",
+        "viewMatches": "View matches",
+        "reviewInMatches": "Review in matches"
+      },
+      "offers": {
+        "tonightsOffers": "Tonight's offers",
+        "perksForGuests": "Perks just for guests",
+        "saveCodes": "Save codes and show staff when you redeem.",
+        "saveOffer": "Save offer",
+        "saving": "Saving…",
+        "saved": "Saved ✓",
+        "saveToReveal": "Save to reveal your promo code.",
+        "promoCode": "Promo code: {code}",
+        "savedAt": "Saved {time}.",
+        "viewDetails": "View details"
+      },
+      "matchesPreview": {
+        "matches": "Matches",
+        "keepVibeGoing": "Keep the vibe going",
+        "matchedWith": "Matched with {partnerName} at {time}. Tap to open your direct WhatsApp link.",
+        "jumpIntoWhatsApp": "Jump into WhatsApp",
+        "viewMatches": "View matches",
+        "aGuest": "a guest"
+      },
+      "emptyState": {
+        "privateModeOn": "Private mode is on",
+        "floorToYourself": "You've got the floor to yourself",
+        "venueWarmingUp": "{venueName} is warming up",
+        "privateDescription": "Only you can see the crowd right now. Send a heart or invite to make yourself visible, or switch privacy off from your profile.",
+        "floorDescription": "Everyone else is still signing in. Drop a heart or invite to start the first vibe of the night.",
+        "warmingUpDescription": "Be the first to check in. As soon as guests arrive, their cards will queue up in your deck.",
+        "whyDontSeeOthers": "Why you don't see others (yet)",
+        "privateTip1": "Hearts surface you immediately for the person you choose.",
+        "privateTip2": "Toggle privacy off in your profile when you're ready to be seen by everyone.",
+        "publicTip1": "Invite someone IRL to join Social and they'll appear instantly.",
+        "publicTip2": "Keep the app open—new guests slide into the deck the moment they check in."
+      },
+      "coachmark": {
+        "howSocialWorks": "How Social works",
+        "connectMatch": "Connect & match",
+        "sendVibe": "✨ Send vibe",
+        "sendVibeDescription": "to connect with someone who catches your eye.",
+        "theyGetNotified": "🔔 They get notified",
+        "theyGetNotifiedDescription": "and can accept or pass in the Matches tab.",
+        "matchUnlocked": "💬 Match unlocked!",
+        "matchUnlockedDescription": "When both of you send vibes, you get WhatsApp chat access—no awkward number exchanges.",
+        "letsVibe": "Let's vibe"
+      },
+      "tooltip": {
+        "swipeOrTap": "Swipe or tap to connect",
+        "heartsGetNoticed": "Hearts get you noticed. Invites unlock WhatsApp once they accept. Mutual vibes light up the matches tab."
+      },
+      "celebration": {
+        "mutualMatch": "Mutual match",
+        "bothSaidYes": "You both said yes at {time}. Keep the vibe going in WhatsApp.",
+        "openWhatsApp": "Open WhatsApp",
+        "viewFullMatch": "View full match",
+        "close": "Close"
+      },
+      "tutorial": {
+        "title": "Welcome to Social!",
+        "description": "Here's how to connect with others at the venue",
+        "browseDeck": {
+          "title": "Browse the deck",
+          "description": "Swipe through guests currently at the venue. Check out their photos, bio, and vibe."
+        },
+        "sendVibes": {
+          "title": "Send vibes",
+          "description": "Tap \"Send vibe\" on profiles that catch your eye. They'll get a notification in their Matches tab."
+        },
+        "matchChat": {
+          "title": "Match & chat",
+          "description": "When you both send vibes and accept, you unlock WhatsApp chat—no awkward number exchanges on the floor."
+        },
+        "startConnecting": "Start connecting"
+      }
+    },
+    "matches": {
+      "title": "Requests & Matches",
+      "onboardingRequired": {
+        "title": "We need a few details first",
+        "description": "Complete your profile to start connecting with the venue.",
+        "button": "Finish onboarding"
+      },
+      "header": {
+        "subtitle": "Vibes & Matches",
+        "title": "Keep the energy flowing",
+        "description": "Respond to vibes, check your matches, and jump straight into WhatsApp when it clicks.",
+        "magicLinksGoTo": "Magic links go to"
+      },
+      "tabs": {
+        "incoming": "Incoming Vibes",
+        "matches": "Matches",
+        "sent": "Sent Vibes"
+      },
+      "incoming": {
+        "empty": "No incoming vibes yet. They'll show up here when someone sends you a vibe.",
+        "sentYouVibe": "Sent you a vibe"
+      },
+      "matches": {
+        "empty": "Once someone accepts your vibe, your match and a WhatsApp link will pop up here.",
+        "matched": "Matched {time}",
+        "messageOnWhatsApp": "Message on WhatsApp"
+      },
+      "sent": {
+        "empty": "Vibes you send will show up here with their status.",
+        "sentVibeTo": "Sent vibe to",
+        "pending": "Pending",
+        "accepted": "accepted ✨"
+      },
+      "actions": {
+        "unmatch": "Unmatch",
+        "blockUser": "Block User",
+        "accept": "Accept",
+        "decline": "Decline",
+        "pass": "Pass",
+        "matchOptions": "Match options"
+      },
+      "confirmations": {
+        "unmatchTitle": "Unmatch {name}?",
+        "unmatchDescription": "You can match again if you both send vibes in the future.",
+        "blockTitle": "Block {name}?",
+        "blockDescription": "They won't be able to see you or send you vibes anymore. This will also unmatch you.",
+        "cancel": "Cancel",
+        "block": "Block"
+      },
+      "whatsapp": {
+        "messageTemplate": "Hey! We matched on Social tonight. Let's keep the vibe going ✨"
+      }
+    },
+    "requests": {
+      "title": "Song Requests",
+      "onboardingRequired": {
+        "title": "You're almost there",
+        "description": "Complete onboarding so the DJ knows who's buzzing them."
+      },
+      "header": {
+        "subtitle": "Request a track for tonight's vibe.",
+        "description": "Submit your song request to the DJ. They'll see it in their queue and work it into the night.",
+        "updatesSent": "Updates sent to"
+      },
+      "form": {
+        "songTitle": "Song title",
+        "songPlaceholder": "Track name",
+        "artist": "Artist",
+        "artistOptional": "(optional)",
+        "artistPlaceholder": "Who performs it?",
+        "dedication": "Dedication or vibe (optional)",
+        "dedicationPlaceholder": "Ring in the chorus at midnight!",
+        "requestsTonight": "{count} requests tonight",
+        "submit": "Submit Request",
+        "success": {
+          "title": "Request submitted! 🎵",
+          "description": "Your song is in the queue. The DJ will see it soon.",
+          "openWhatsApp": "Open WhatsApp (Optional)"
+        }
+      },
+      "yourRequests": {
+        "title": "Your Requests Tonight",
+        "requestedAt": "Requested at"
+      },
+      "whatsapp": {
+        "messageTemplate": "Hey DJ! {name} here 👋\nSong request: {song}\n{artist}\n{note}"
+      }
+    },
+    "offers": {
+      "title": "Offers",
+      "header": {
+        "subtitle": "Tonight's specials",
+        "description": "From VIP tables to late-night bites, unlock the perks curated by the venue team."
+      }
+    },
+    "profile": {
+      "title": "Your Profile",
+      "onboardingRequired": {
+        "title": "We need a few details first",
+        "description": "Complete onboarding to unlock your profile controls."
+      },
+      "header": {
+        "subtitle": "Your account",
+        "title": "Control how others see you.",
+        "description": "Update your vibe, toggle privacy, or tweak your bio. Staff can still verify info when needed."
+      },
+      "form": {
+        "profilePhoto": "Profile photo",
+        "profilePhotoDescription": "Guests see this at the top of your card. Choose a clear, welcoming shot.",
+        "uploadPhoto": "Upload photo",
+        "adjust": "Adjust",
+        "remove": "Remove",
+        "displayName": "Display name",
+        "phoneNumber": "Phone number",
+        "phoneHelp": "Required to send vibes and unlock WhatsApp chat with matches. Format: +1234567890",
+        "bio": "Bio",
+        "bioPlaceholder": "Let people know your vibe.",
+        "bioHelp": "Shared when your profile is public.",
+        "galleryPhotos": "Gallery photos",
+        "galleryDescription": "Keep up to four photos. Remove ones you no longer want and add new ones below.",
+        "noGalleryPhotos": "No gallery photos yet. Add some below.",
+        "tapToAdd": "Tap to add new photos",
+        "queuedPhotos": "Queued {count} new photo{plural}",
+        "galleryHelp": "JPEG or PNG · Max 5 MB each · Replaces nothing until you save",
+        "newPhotos": "New Photos (Not saved yet)",
+        "highlights": "Highlights",
+        "highlightsDescription": "Tags appear on your connect card. Keep them short and punchy.",
+        "addTag": "Add tag",
+        "addAnotherTag": "Add another tag",
+        "tagPlaceholder": "#HouseHead",
+        "favoriteTrackLink": "Favorite track link",
+        "favoriteTrackPlaceholder": "https://open.spotify.com/track/...",
+        "favoriteTrackHelp": "Share a Spotify or Apple Music link to keep the conversation flowing.",
+        "privateMode": "Private Mode",
+        "hideFromDeck": "Hide from deck",
+        "privateDescription": "When enabled, you won't appear in the connect deck. You can still browse others and send vibes. Venue staff always have access for safety.",
+        "magicLinkEmails": "Magic link emails go to {email}. Ask the staff if you need to update it.",
+        "save": "Save profile",
+        "saving": "Saving your profile...",
+        "success": "Profile updated. Your changes are live."
+      },
+      "alerts": {
+        "maxTags": "You can add up to five highlight tags.",
+        "maxGallery": "You can keep up to four gallery photos.",
+        "fileTooLarge": "Please upload an image smaller than 5 MB.",
+        "filesTooLarge": "Please upload images smaller than 5 MB. {count} file(s) are too large."
+      },
+      "crop": {
+        "zoom": "Zoom",
+        "cancel": "Cancel",
+        "apply": "Apply Crop"
+      }
+    },
+    "signOut": {
+      "title": "Sign Out",
+      "signedInAs": "Signed in as",
+      "description": "You can safely sign out from Social. You'll need a new magic link to return.",
+      "button": "Sign out now",
+      "cancel": "Never mind, return to the app"
+    }
+  },
+  "auth": {
+    "signIn": {
+      "title": "Sign In",
+      "header": {
+        "title": "Sign in to {venue}",
+        "description": "Enter your email to receive a magic link. No passwords, just vibes."
+      },
+      "form": {
+        "email": "Email",
+        "emailPlaceholder": "you@email.com",
+        "otp": "OTP",
+        "submit": "Send magic link",
+        "submitting": "Sending magic link...",
+        "success": "Magic link sent. Check your inbox to continue.",
+        "errors": {
+          "emailRequired": "Please enter an email address.",
+          "generic": "An error occurred. Please try again."
+        }
+      },
+      "errors": {
+        "adminEmail": "Admin accounts must use /sign-in/admin",
+        "noActiveSession": "No active session found. Please select a venue."
+      },
+      "links": {
+        "changeVenue": "\u2190 Change venue",
+        "venueStaff": "Venue staff?"
+      }
+    },
+    "adminSignIn": {
+      "title": "Admin Sign In",
+      "adminAccess": "Admin Access",
+      "header": {
+        "title": "Venue Dashboard",
+        "description": "Sign in with your admin credentials to manage your venue."
+      },
+      "form": {
+        "email": "Email",
+        "emailPlaceholder": "admin@venue.com",
+        "password": "Password",
+        "passwordPlaceholder": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+        "submit": "Sign in as Admin",
+        "submitting": "Signing in...",
+        "errors": {
+          "emailPasswordRequired": "Email and password are required",
+          "invalidCredentials": "Invalid email or password",
+          "accountNotConfigured": "Admin account not properly configured.",
+          "sessionFailed": "Failed to create session. Please try again.",
+          "authFailed": "Failed to authenticate. Please try again.",
+          "generic": "An error occurred. Please try again."
+        }
+      },
+      "errors": {
+        "invalidCredentials": "Invalid email or password",
+        "notAdmin": "This account does not have admin access",
+        "authError": "Authentication failed. Please try again."
+      },
+      "links": {
+        "guestSignIn": "\u2190 Guest sign in"
+      }
+    },
+    "onboarding": {
+      "back": "\u2190 Back",
+      "stepIndicator": "Step 1 of 1",
+      "header": {
+        "subtitle": "Step 1 \u00b7 Profile setup",
+        "title": "Almost there. Tell the venue who you are.",
+        "description": "Your name and age stay private with the venue team. Guests only see what you make public."
+      },
+      "form": {
+        "displayName": "Display name",
+        "displayNamePlaceholder": "Your vibe name",
+        "age": "Age",
+        "agePlaceholder": "21",
+        "phoneNumber": "Phone number",
+        "phoneOptional": "(optional)",
+        "phonePlaceholder": "+1234567890",
+        "phoneHelp": "Required to send vibes and unlock WhatsApp chat with matches. Format: +1234567890",
+        "bio": "Bio (optional)",
+        "bioPlaceholder": "Drop a line to break the ice.",
+        "profilePhoto": "Profile photo",
+        "profilePhotoDescription": "Shows on your connect card. Choose a clear shot—no filters needed.",
+        "uploadPhoto": "Upload photo",
+        "adjust": "Adjust",
+        "remove": "remove",
+        "idPhoto": "Photo ID (internal use)",
+        "idPhotoDescription": "Only venue staff can view this. Upload a government-issued ID or passport so we can verify you quickly if needed.",
+        "tapToUpload": "Tap to upload your ID photo",
+        "idPhotoHelp": "JPEG or PNG · Max 5 MB",
+        "idPhotoTips": "Tips: face visible · no glare · no filters",
+        "adjustPhoto": "Adjust photo",
+        "galleryPhotos": "Gallery photos (optional)",
+        "galleryDescription": "Add up to four vibe shots. They'll sit behind your card in the connect deck.",
+        "tapToAdd": "Tap to add gallery photos",
+        "selectedPhotos": "Selected {count} photo{plural}",
+        "galleryHelp": "JPEG or PNG · Max 5 MB each",
+        "highlights": "Highlights",
+        "highlightsDescription": "Tags appear on your connect card. Keep them short and punchy.",
+        "addTag": "Add tag",
+        "addAnotherTag": "Add another tag",
+        "tagPlaceholder": "#HouseHead",
+        "favoriteTrack": "Favorite track link (optional)",
+        "favoriteTrackPlaceholder": "https://open.spotify.com/track/...",
+        "favoriteTrackHelp": "Share a Spotify or Apple Music link to keep the conversation flowing.",
+        "privateMode": "Private Mode",
+        "privateDescription": "When enabled, you won't appear in the connect deck. You can still browse others and send vibes. Venue staff always have access for safety.",
+        "magicLinkEmails": "We'll email magic links to {email}",
+        "save": "Save profile",
+        "saving": "Saving your profile...",
+        "success": "Profile saved. You're ready to connect once the venue doors open."
+      },
+      "crop": {
+        "zoom": "Zoom",
+        "cancel": "Cancel",
+        "apply": "Apply Crop"
+      },
+      "alerts": {
+        "fileTooLarge": "Please upload an image smaller than 5 MB.",
+        "maxGallery": "Select up to 4 photos.",
+        "maxTags": "You can add up to five highlight tags.",
+        "filesTooLarge": "Please upload images smaller than 5 MB. {count} file(s) are too large."
+      }
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "loading": "Loading dashboard\u2026",
+      "cards": {
+        "currentAttendance": "Current attendance",
+        "matchesToday": "Matches today",
+        "songRequests": "Song requests",
+        "newCustomers": "New customers"
+      },
+      "chart": {
+        "title": "Attendance trend",
+        "description": "Track check-ins over selectable windows to understand your busiest times.",
+        "ranges": {
+          "12h": "Last 12 hours",
+          "24h": "Last 24 hours",
+          "7d": "Last 7 days"
+        },
+        "emptyState": "No attendance data for this range yet."
+      }
+    },
+    "users": {
+      "title": "Guests",
+      "description": "Manage who is currently in the venue and block disruptive guests.",
+      "profilesCount": "profiles",
+      "status": {
+        "active": "Active",
+        "offline": "Offline",
+        "blocked": "Blocked",
+        "private": "Private",
+        "public": "Public"
+      },
+      "block": {
+        "duration": {
+          "1h": "1 hour",
+          "24h": "24 hours",
+          "7d": "7 days",
+          "permanent": "Permanent"
+        },
+        "reasonPlaceholder": "Reason",
+        "button": "Block",
+        "unblock": "Unblock",
+        "reasonLabel": "Reason"
+      },
+      "messages": {
+        "updated": "Guest status updated.",
+        "lastSeen": "Last seen",
+        "unknown": "Unknown"
+      }
+    },
+    "requests": {
+      "title": "Song request queue",
+      "description": "Track WhatsApp requests and mark them as completed once played.",
+      "table": {
+        "request": "Request",
+        "guest": "Guest",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "openChat": "Open chat",
+        "markPlayed": "Mark played",
+        "cancel": "Cancel"
+      }
+    },
+    "offers": {
+      "title": "Offers",
+      "description": "Toggle venue promotions on the fly. Use higher priority to surface key offers.",
+      "createHeading": "Create new offer",
+      "form": {
+        "title": "Title",
+        "titlePlaceholder": "Half-off cocktails",
+        "description": "Description",
+        "descriptionPlaceholder": "Share details about the offer and any fine print.",
+        "start": "Start",
+        "end": "End",
+        "ctaLabel": "CTA label",
+        "ctaLabelPlaceholder": "View menu",
+        "ctaUrl": "CTA link",
+        "ctaUrlPlaceholder": "https://example.com/menu",
+        "promoCode": "Promo code",
+        "promoCodePlaceholder": "SOCIAL50",
+        "imageUrl": "Image URL",
+        "imageUrlPlaceholder": "https://...",
+        "priority": "Priority",
+        "priorityDescription": "Higher numbers surface first in the guest app.",
+        "isActive": "Offer is active",
+        "submit": "Save offer",
+        "create": "Create offer",
+        "update": "Update offer"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "actions": {
+        "preview": "Preview offer",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "delete": "Delete"
+      },
+      "stats": {
+        "savedBy": "Saved by {count} guests",
+        "redeemed": "Redeemed {count} times",
+        "promoCode": "Promo code",
+        "lastSaved": "Last saved by {guest} at {time}",
+        "priority": "Priority",
+        "start": "Start",
+        "now": "Now"
+      },
+      "details": {
+        "guestSaves": "Guest saves ({count})",
+        "editOffer": "Edit offer details",
+        "noSaves": "No guests have saved this offer yet."
+      },
+      "emptyState": "No offers created yet.",
+      "messages": {
+        "created": "Offer created.",
+        "updated": "Offer updated.",
+        "saved": "Offer saved."
+      },
+      "redemption": {
+        "saved": "Saved",
+        "redeemed": "Redeemed",
+        "markRedeemed": "Mark redeemed",
+        "undoRedeem": "Undo redeem"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "tabs": {
+        "venueCustomization": "Venue customization",
+        "sessionConfiguration": "Session configuration"
+      },
+      "venue": {
+        "title": "Venue customization",
+        "description": "Update guest-facing details, upload gallery shots, and manage your contact info.",
+        "fields": {
+          "venueName": "Venue name",
+          "capacity": "Capacity",
+          "capacityPlaceholder": "e.g., 200",
+          "description": "Description",
+          "descriptionPlaceholder": "Tell guests about your vibe...",
+          "address": "Address",
+          "addressPlaceholder": "123 Main St, City",
+          "website": "Website",
+          "websitePlaceholder": "https://",
+          "instagram": "Instagram",
+          "instagramPlaceholder": "@yoursocialclub",
+          "phoneNumber": "Phone number",
+          "phonePlaceholder": "+1 555 555 5555",
+          "amenities": "Amenities (comma separated)",
+          "amenitiesPlaceholder": "WiFi, Outdoor seating, VIP lounge",
+          "venueLogo": "Venue logo",
+          "logoDescription": "Upload a square logo for guest lists and QR pages.",
+          "coverImage": "Cover image",
+          "coverDescription": "Panoramic photo used for onboarding and settings previews.",
+          "venueGallery": "Venue gallery",
+          "galleryDescription": "Share up to {max} highlights. Guests will see these on the landing page.",
+          "uploadImages": "Upload images",
+          "remove": "Remove",
+          "noGalleryImages": "No gallery images yet. Upload some to showcase your venue.",
+          "currentLogo": "Current logo",
+          "replaceLogo": "Upload a new file to replace it."
+        },
+        "qr": {
+          "title": "Venue QR code",
+          "description": "Generate a QR code guests can scan to open your venue's sign-in page instantly.",
+          "generating": "Generating…",
+          "regenerate": "Regenerate QR",
+          "generate": "Generate QR",
+          "preview": "Generate a QR code to preview it here.",
+          "download": "Download QR code",
+          "displayFullscreen": "Display QR in full screen",
+          "signInLink": "Sign-in link",
+          "unavailable": "Unavailable — refresh after saving venue settings.",
+          "scanTitle": "Scan to join {venueName}",
+          "scanDescription": "Point your camera at the QR code below to open Social and jump straight into {venueName}.",
+          "orVisit": "Or visit",
+          "venueLinkUnavailable": "Venue link is unavailable. Save venue details and refresh the page.",
+          "qrError": "Unable to generate the QR code. Please try again."
+        },
+        "actions": {
+          "save": "Save venue settings",
+          "saving": "Saving…"
+        },
+        "messages": {
+          "saved": "Venue settings saved."
+        }
+      },
+      "session": {
+        "title": "Session configuration",
+        "description": "Session duration controls how long guests can stay connected. After the timer ends, all guests are returned to the landing page.",
+        "fields": {
+          "sessionName": "Session name",
+          "sessionNamePlaceholder": "Friday Night Vibes",
+          "sessionDescription": "Session description",
+          "sessionDescriptionPlaceholder": "Highlight DJs, drink specials, or anything else guests should know.",
+          "duration": "Duration",
+          "durationHelp": "Minimum 1 hour, maximum 1 week. Guests will be signed out when this timer hits zero.",
+          "sessionType": "Session type",
+          "entryFee": "Entry fee",
+          "entryFeePlaceholder": "0.00",
+          "entryFeeHelp": "Leave blank if the session is free for guests.",
+          "status": "Status",
+          "statusActive": "Active — guests are currently connected.",
+          "statusInactive": "Inactive — activate to let guests join."
+        },
+        "durationOptions": {
+          "1": "1 hour",
+          "2": "2 hours",
+          "3": "3 hours",
+          "4": "4 hours",
+          "6": "6 hours",
+          "8": "8 hours",
+          "12": "12 hours",
+          "24": "24 hours (1 day)",
+          "48": "48 hours (2 days)",
+          "72": "72 hours (3 days)",
+          "168": "168 hours (1 week)"
+        },
+        "sessionTypes": {
+          "event": "Special event",
+          "daily": "Daily session",
+          "weekly": "Weekly session",
+          "custom": "Custom"
+        },
+        "infoBox": {
+          "title": "How session timing works",
+          "points": {
+            "1": "Guests can only log in during an active session.",
+            "2": "When the timer reaches zero, guests are redirected to the landing page.",
+            "3": "QR codes and manual venue selection are blocked until a session is active again."
+          }
+        },
+        "actions": {
+          "save": "Save session settings",
+          "saving": "Saving…",
+          "activate": "Activate session",
+          "deactivate": "Deactivate session"
+        },
+        "messages": {
+          "saved": "Session settings saved.",
+          "activated": "Session activated.",
+          "deactivated": "Session deactivated."
+        }
+      }
+    },
+    "signOut": {
+      "title": "Sign Out",
+      "signedInAs": "Signed in as",
+      "description": "You can safely sign out from the admin dashboard. You'll need to sign in again to return.",
+      "button": "Sign out now",
+      "cancel": "Never mind, stay in dashboard"
+    },
+    "onboarding": {
+      "title": "Admin Setup",
+      "header": {
+        "adminSetup": "Admin Setup"
+      },
+      "steps": {
+        "venue": {
+          "label": "Venue Setup",
+          "number": "1"
+        },
+        "session": {
+          "label": "Session Config",
+          "number": "2"
+        },
+        "profile": {
+          "label": "Your Profile",
+          "number": "3"
+        }
+      },
+      "venue": {
+        "title": "Welcome to Social! 🎉",
+        "description": "Let's set up your venue. This information will be visible to guests.",
+        "fields": {
+          "venueName": "Venue Name",
+          "venueNamePlaceholder": "e.g., The Night Owl",
+          "description": "Description",
+          "descriptionPlaceholder": "Tell guests about your venue's vibe...",
+          "logo": "Venue Logo",
+          "logoPreview": "Logo preview",
+          "address": "Address",
+          "addressPlaceholder": "123 Main St, City, State",
+          "capacity": "Capacity",
+          "capacityPlaceholder": "200"
+        },
+        "fileStatus": {
+          "noFile": "No file chosen",
+          "existing": "Existing logo"
+        },
+        "actions": {
+          "back": "← Back",
+          "continue": "Continue to Session Setup",
+          "saving": "Saving..."
+        }
+      },
+      "session": {
+        "title": "Configure Your Session ⏰",
+        "description": "Set up how long guests can connect at {venueName}",
+        "fields": {
+          "sessionName": "Session Name",
+          "sessionNamePlaceholder": "e.g., Friday Night Vibes",
+          "description": "Description",
+          "descriptionPlaceholder": "What's special about tonight?",
+          "duration": "Duration (hours)",
+          "sessionType": "Session Type"
+        },
+        "durationOptions": {
+          "1": "1 hour",
+          "2": "2 hours",
+          "3": "3 hours",
+          "4": "4 hours",
+          "6": "6 hours",
+          "8": "8 hours",
+          "12": "12 hours",
+          "24": "24 hours (1 day)",
+          "48": "48 hours (2 days)",
+          "72": "72 hours (3 days)",
+          "168": "168 hours (1 week)"
+        },
+        "durationHelp": "Minimum 1 hour, maximum 1 week. After the session ends, guest accounts will be deactivated.",
+        "sessionTypes": {
+          "event": "Special Event",
+          "daily": "Daily Session",
+          "weekly": "Weekly Session",
+          "custom": "Custom"
+        },
+        "infoBox": {
+          "title": "💡 How Sessions Work",
+          "points": {
+            "1": "Guests can only connect during active sessions",
+            "2": "After a session ends, guest accounts are automatically deactivated",
+            "3": "You can create a new session anytime from the admin dashboard",
+            "4": "Each venue can have only one active session at a time"
+          }
+        },
+        "actions": {
+          "back": "← Back",
+          "continue": "Continue to Profile Setup",
+          "creating": "Creating Session..."
+        }
+      },
+      "profile": {
+        "title": "Almost There! 👤",
+        "description": "Set up your admin profile. This is also your guest profile if you appear in the feed.",
+        "fields": {
+          "avatar": "Profile Photo",
+          "avatarHelp": "Square photo recommended. Max 5MB.",
+          "displayName": "Display Name",
+          "displayNamePlaceholder": "How should guests see you?",
+          "bio": "Bio (Optional)",
+          "bioPlaceholder": "Tell guests a bit about yourself..."
+        },
+        "fileStatus": {
+          "noFile": "No file chosen",
+          "existing": "Existing photo"
+        },
+        "crop": {
+          "zoom": "Zoom",
+          "cancel": "Cancel",
+          "apply": "Apply Crop"
+        },
+        "actions": {
+          "back": "← Back",
+          "complete": "Complete Setup & Go to Dashboard",
+          "completing": "Completing Setup..."
+        }
+      }
+    }
+  }
+}
+

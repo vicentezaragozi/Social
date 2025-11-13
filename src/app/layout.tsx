@@ -1,10 +1,12 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import type { Metadata } from "next";
+import {Geist, Geist_Mono} from "next/font/google";
+import type {ReactNode} from "react";
 
-import { env } from "@/lib/env";
-import { PWAProvider } from "@/components/pwa/pwa-provider";
+import {routing} from "@/i18n";
+import type {AppLocale} from "@/i18n";
+
+import {cookies} from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,34 +18,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
-  title: {
-    default: "Social — Nightlife, Connected",
-    template: "%s | Social",
-  },
-  description:
-    "Social is the discreet nightlife companion for venues and their guests. Connect, match, and manage the crowd from a single progressive web experience.",
-  applicationName: "Social",
-  appleWebApp: {
-    statusBarStyle: "black-translucent",
-    title: "Social",
-  },
-  manifest: "/manifest.webmanifest",
-};
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
+  let locale: AppLocale = routing.defaultLocale;
+  try {
+    const cookieStore = await cookies();
+    const cookieLocale = cookieStore.get?.("NEXT_LOCALE")?.value;
+    if (cookieLocale && routing.locales.includes(cookieLocale as AppLocale)) {
+      locale = cookieLocale as AppLocale;
+    }
+  } catch {
+    // Ignore cookie access issues and fall back to default locale
+  }
+
   return (
-    <html lang="en">
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground antialiased`}
       >
-        <PWAProvider>{children}</PWAProvider>
+        {children}
       </body>
     </html>
   );
 }
+

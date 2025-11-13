@@ -1,0 +1,937 @@
+{
+  "common": {
+    "languageToggle": {
+      "englishShort": "ENG",
+      "spanishShort": "ES",
+      "englishLabel": "Ingl\u00e9s",
+      "spanishLabel": "Espa\u00f1ol"
+    },
+    "actions": {
+      "close": "Cerrar",
+      "signOut": "Cerrar sesi\u00f3n",
+      "continue": "Continuar",
+      "scanQr": "Instrucciones para escanear QR",
+      "back": "Atr\u00e1s",
+      "signIn": "Iniciar sesi\u00f3n",
+      "viewAll": "Ver todo",
+      "seeOffers": "Ver ofertas",
+      "requestSong": "Solicitar una canci\u00f3n"
+    },
+    "aria": {
+      "signOut": "Cerrar sesi\u00f3n",
+      "profile": "Perfil"
+    },
+    "labels": {
+      "adminRole": "Administrador",
+      "venue": "Recinto"
+    },
+    "links": {
+      "adminSignIn": "\u00bfPersonal del recinto? Inicia sesi\u00f3n aqu\u00ed"
+    },
+    "messages": {
+      "noVenues": "No hay recintos disponibles por el momento."
+    },
+    "status": {
+      "pending": "Pendiente",
+      "completed": "Completado",
+      "cancelled": "Cancelado",
+      "inQueue": "En cola",
+      "played": "Reproducido \u2728",
+      "declined": "Rechazado"
+    },
+    "blocked": {
+      "title": "Acceso temporalmente restringido",
+      "description": "El personal del recinto estableci\u00f3 un bloqueo en tu cuenta. No puedes ver el feed de invitados ni enviar vibes hasta que se elimine.",
+      "reason": "Raz\u00f3n",
+      "contactStaff": "Contacta al personal para m\u00e1s informaci\u00f3n.",
+      "blockLifts": "El bloqueo se levanta el {date}.",
+      "blockShouldLift": "El bloqueo deber\u00eda levantarse pronto. Recarga o contacta al personal si persiste.",
+      "help": "\u00bfNecesitas ayuda? Muestra esta pantalla al equipo del recinto para que puedan revisar el bloqueo."
+    },
+    "errors": {
+      "generic": "Ocurri\u00f3 un error. Por favor intenta de nuevo.",
+      "signInAgain": "Necesitas iniciar sesi\u00f3n de nuevo.",
+      "pleaseSignInAgain": "Por favor inicia sesi\u00f3n de nuevo.",
+      "invalidRequest": "Solicitud inv\u00e1lida.",
+      "invalidResponse": "Respuesta inv\u00e1lida.",
+      "invalidMatchId": "ID de match inv\u00e1lido.",
+      "invalidUserId": "ID de usuario inv\u00e1lido.",
+      "matchNotFound": "Match no encontrado.",
+      "inviteNotFound": "Invitaci\u00f3n no encontrada o ya manejada.",
+      "interactionDetails": "Detalles de interacci\u00f3n faltantes o inv\u00e1lidos.",
+      "activeSessionNotFound": "Sesi\u00f3n activa no encontrada. Actualiza e intenta de nuevo.",
+      "couldNotSendInteraction": "No se pudo enviar la interacci\u00f3n. Intenta de nuevo en un momento.",
+      "unableToUpdateInvite": "No se pudo actualizar la invitaci\u00f3n. Intenta de nuevo.",
+      "couldNotUnmatch": "No se pudo deshacer el match. Intenta de nuevo.",
+      "couldNotBlock": "No se pudo bloquear al usuario. Intenta de nuevo.",
+      "userAlreadyBlocked": "El usuario ya est\u00e1 bloqueado.",
+      "cannotBlockSelf": "No puedes bloquearte a ti mismo.",
+      "onlyUnmatchOwn": "Solo puedes deshacer tus propios matches.",
+      "unableToSaveOffer": "No se puede guardar la oferta en este momento.",
+      "offerNotFound": "Oferta no encontrada.",
+      "offerNotActive": "Esta oferta ya no est\u00e1 activa.",
+      "offerNotAvailable": "Esta oferta a\u00fan no est\u00e1 disponible.",
+      "offerExpired": "Esta oferta ha expirado.",
+      "addPhoneNumber": "Agrega tu n\u00famero de tel\u00e9fono en Perfil para enviar vibes y desbloquear el matching.",
+      "nameRequired": "El nombre es requerido.",
+      "displayNameRequired": "El nombre para mostrar es requerido.",
+      "mustBe18": "Debes tener 18 a\u00f1os o m\u00e1s.",
+      "shareValidLink": "Comparte un enlace v\u00e1lido.",
+      "invalidFormInput": "Entrada de formulario inv\u00e1lida.",
+      "invalidProfileDetails": "Detalles de perfil inv\u00e1lidos.",
+      "idPhotoRequired": "Por favor sube una foto de tu ID.",
+      "idPhotoTooLarge": "La foto de ID debe ser menor a 5 MB.",
+      "profilePhotoTooLarge": "La foto de perfil debe ser menor a 5 MB.",
+      "galleryPhotoTooLarge": "Las fotos de galer\u00eda deben ser menores a 5 MB cada una.",
+      "couldNotUploadId": "No se pudo subir la foto de ID. Intenta de nuevo.",
+      "couldNotUploadAvatar": "No se pudo subir la foto de perfil. Intenta de nuevo.",
+      "couldNotUploadGallery": "No se pudo subir la foto de galer\u00eda. Intenta de nuevo.",
+      "couldNotLoadProfile": "No se pudo cargar tu perfil actual. Intenta de nuevo.",
+      "storageBucketMissing": "El bucket de almacenamiento '{bucket}' falta. Pide a un administrador que lo cree en Supabase Storage y vuelve a intentar.",
+      "addSongTitle": "Agrega el t\u00edtulo de la canci\u00f3n."
+    },
+    "toasts": {
+      "close": "Cerrar"
+    },
+    "pwa": {
+      "title": "Agrega Social a tu pantalla de inicio",
+      "description": "Instala la aplicación para acceso en pantalla completa y entrada más rápida al recinto.",
+      "later": "Más tarde",
+      "install": "Instalar",
+      "showPrompt": "Mostrar aviso de instalación",
+      "minimizePrompt": "Minimizar aviso de instalación"
+    }
+  },
+  "appShell": {
+    "nav": {
+      "connect": "Conectar",
+      "matches": "Coincidencias",
+      "requests": "Solicitudes",
+      "offers": "Ofertas",
+      "profile": "Perfil"
+    }
+  },
+  "adminShell": {
+    "title": "Panel del recinto",
+    "goToApp": "Ir a la App",
+    "nav": {
+      "dashboard": "Panel",
+      "guests": "Invitados",
+      "songQueue": "Cola de canciones",
+      "offers": "Ofertas",
+      "settings": "Configuraci\u00f3n"
+    }
+  },
+  "landing": {
+    "headline": {
+      "title": "Bienvenido a Social",
+      "subtitle": "Conecta con personas en tu recinto esta noche"
+    },
+    "venueSelector": {
+      "title": "Selecciona tu recinto",
+      "subtitle": "Elige el lugar donde est\u00e1s esta noche",
+      "button": "Continuar al inicio de sesi\u00f3n"
+    },
+    "qrSection": {
+      "title": "\u00bfTienes un c\u00f3digo QR?",
+      "subtitle": "Toca abajo para aprender a escanear el c\u00f3digo QR en tu recinto",
+      "footer": "La mayor\u00eda de los tel\u00e9fonos abren la p\u00e1gina correcta autom\u00e1ticamente al escanear el QR.",
+      "openButton": "Instrucciones para escanear QR",
+      "modalTitle": "Escanea con tu tel\u00e9fono",
+      "modalDescription": "Usa la c\u00e1mara de tu tel\u00e9fono o cualquier app de escaneo QR para escanear el c\u00f3digo mostrado en el recinto. El enlace abrir\u00e1 Social y te llevar\u00e1 directamente a la p\u00e1gina correcta de inicio de sesi\u00f3n.",
+      "quickTips": "Consejos r\u00e1pidos",
+      "tipBrightness": "Sube el brillo de la pantalla en pantallas compartidas para escaneos m\u00e1s r\u00e1pidos.",
+      "tipBrowser": "Si el enlace se abre en un navegador, sigue las indicaciones para iniciar sesi\u00f3n.",
+      "tipHelp": "\u00bfNecesitas ayuda? Pide orientaci\u00f3n al personal del recinto."
+    }
+  },
+  "metadata": {
+    "defaultTitle": "Social \u2014 Vida nocturna conectada",
+    "titleTemplate": "%s | Social",
+    "description": "Social es el compa\u00f1ero discreto de la vida nocturna para los recintos y sus invitados. Conecta, haz match y gestiona a la audiencia desde una experiencia web progresiva.",
+    "applicationName": "Social",
+    "appleTitle": "Social",
+    "appleStatusBarStyle": "black-translucent"
+  },
+  "app": {
+    "connect": {
+      "title": "Conectar",
+      "header": {
+        "swipeDeck": "Desliza la baraja",
+        "swipeInstructions": "Desliza o toca para enviar vibes. Haz match cuando ambos se conecten → WhatsApp desbloqueado.",
+        "openingFloor": "Estás abriendo el piso—envía vibes para generar conexiones.",
+        "guest": "invitado",
+        "guests": "invitados",
+        "live": "en vivo",
+        "socialAt": "Social @ {venueName}"
+      },
+      "buttons": {
+        "sendVibe": "Enviar vibe",
+        "vibeSent": "Vibe enviado ✓",
+        "message": "Mensaje",
+        "sendInvite": "Enviar invitación",
+        "inviteSent": "Invitación enviada ✓",
+        "accept": "Aceptar",
+        "decline": "Rechazar",
+        "pass": "Pasar",
+        "viewMatches": "Coincidencias",
+        "viewAll": "Ver todo",
+        "seeOffers": "Ver ofertas",
+        "requestSong": "Solicitar una canción"
+      },
+      "labels": {
+        "favoriteTrack": "Canción favorita",
+        "theyLikedYou": "Ya te enviaron un vibe",
+        "viewMatchDetails": "Ver detalles del match",
+        "matchOnMutual": "Match en vibe mutuo → WhatsApp",
+        "staff": "Personal",
+        "keepingVibeMysterious": "Manteniendo el ambiente misterioso.",
+        "matched": "Match",
+        "heartSent": "Corazón enviado"
+      },
+      "toasts": {
+        "newMatchUnlocked": "Nuevo match desbloqueado",
+        "matchDescription": "Tú y {partnerName} desbloquearon el chat.",
+        "offerSaved": "Oferta guardada",
+        "offerAlreadySaved": "Oferta ya guardada",
+        "offerSavedDescription": "Muestra este código en el recinto: {promoCode}",
+        "offerSavedGeneric": "Guardado en tu lista de ofertas.",
+        "newInviteIncoming": "Nueva invitación entrante",
+        "newHeartReceived": "Nuevo corazón recibido",
+        "inviteDescription": "{senderName} te invitó a chatear.",
+        "heartDescription": "{senderName} te envió un corazón.",
+        "openWhatsApp": "Abrir WhatsApp",
+        "viewMatches": "Ver coincidencias",
+        "reviewInMatches": "Revisar en coincidencias"
+      },
+      "offers": {
+        "tonightsOffers": "Ofertas de esta noche",
+        "perksForGuests": "Beneficios solo para invitados",
+        "saveCodes": "Guarda códigos y muéstralos al personal cuando canjees.",
+        "saveOffer": "Guardar oferta",
+        "saving": "Guardando…",
+        "saved": "Guardado ✓",
+        "saveToReveal": "Guarda para revelar tu código promocional.",
+        "promoCode": "Código promocional: {code}",
+        "savedAt": "Guardado {time}.",
+        "viewDetails": "Ver detalles"
+      },
+      "matchesPreview": {
+        "matches": "Coincidencias",
+        "keepVibeGoing": "Mantén el ambiente",
+        "matchedWith": "Hiciste match con {partnerName} a las {time}. Toca para abrir tu enlace directo de WhatsApp.",
+        "jumpIntoWhatsApp": "Saltar a WhatsApp",
+        "viewMatches": "Ver coincidencias",
+        "aGuest": "un invitado"
+      },
+      "emptyState": {
+        "privateModeOn": "Modo privado activado",
+        "floorToYourself": "Tienes el piso para ti solo",
+        "venueWarmingUp": "{venueName} se está calentando",
+        "privateDescription": "Solo tú puedes ver la multitud ahora mismo. Envía un corazón o una invitación para hacerte visible, o desactiva la privacidad desde tu perfil.",
+        "floorDescription": "Todos los demás aún están iniciando sesión. Deja caer un corazón o una invitación para comenzar el primer vibe de la noche.",
+        "warmingUpDescription": "Sé el primero en registrarte. Tan pronto como lleguen los invitados, sus tarjetas se alinearán en tu baraja.",
+        "whyDontSeeOthers": "Por qué no ves a otros (aún)",
+        "privateTip1": "Los corazones te hacen visible inmediatamente para la persona que elijas.",
+        "privateTip2": "Desactiva la privacidad en tu perfil cuando estés listo para ser visto por todos.",
+        "publicTip1": "Invita a alguien en persona a unirse a Social y aparecerá instantáneamente.",
+        "publicTip2": "Mantén la aplicación abierta—los nuevos invitados se deslizan a la baraja en el momento en que se registran."
+      },
+      "coachmark": {
+        "howSocialWorks": "Cómo funciona Social",
+        "connectMatch": "Conectar y hacer match",
+        "sendVibe": "✨ Enviar vibe",
+        "sendVibeDescription": "para conectar con alguien que llame tu atención.",
+        "theyGetNotified": "🔔 Ellos reciben notificación",
+        "theyGetNotifiedDescription": "y pueden aceptar o pasar en la pestaña Coincidencias.",
+        "matchUnlocked": "💬 ¡Match desbloqueado!",
+        "matchUnlockedDescription": "Cuando ambos envían vibes, obtienes acceso al chat de WhatsApp—sin intercambios incómodos de números.",
+        "letsVibe": "Vamos a vibe"
+      },
+      "tooltip": {
+        "swipeOrTap": "Desliza o toca para conectar",
+        "heartsGetNoticed": "Los corazones te hacen notar. Las invitaciones desbloquean WhatsApp una vez que aceptan. Los vibes mutuos iluminan la pestaña de coincidencias."
+      },
+      "celebration": {
+        "mutualMatch": "Match mutuo",
+        "bothSaidYes": "Ambos dijeron sí a las {time}. Mantén el ambiente en WhatsApp.",
+        "openWhatsApp": "Abrir WhatsApp",
+        "viewFullMatch": "Ver match completo",
+        "close": "Cerrar"
+      },
+      "tutorial": {
+        "title": "¡Bienvenido a Social!",
+        "description": "Así es como conectas con otros en el recinto",
+        "browseDeck": {
+          "title": "Navega la baraja",
+          "description": "Desliza por los invitados actualmente en el recinto. Revisa sus fotos, biografía y ambiente."
+        },
+        "sendVibes": {
+          "title": "Enviar vibes",
+          "description": "Toca \"Enviar vibe\" en los perfiles que llamen tu atención. Recibirán una notificación en su pestaña Coincidencias."
+        },
+        "matchChat": {
+          "title": "Hacer match y chatear",
+          "description": "Cuando ambos envían vibes y aceptan, desbloqueas el chat de WhatsApp—sin intercambios incómodos de números en el piso."
+        },
+        "startConnecting": "Comenzar a conectar"
+      }
+    },
+    "matches": {
+      "title": "Solicitudes y coincidencias",
+      "onboardingRequired": {
+        "title": "Necesitamos algunos detalles primero",
+        "description": "Completa tu perfil para comenzar a conectar con el recinto.",
+        "button": "Terminar configuraci\u00f3n"
+      },
+      "header": {
+        "subtitle": "Vibes y Coincidencias",
+        "title": "Mantén la energía fluyendo",
+        "description": "Responde a los vibes, revisa tus coincidencias y salta directamente a WhatsApp cuando haga clic.",
+        "magicLinksGoTo": "Los enlaces mágicos van a"
+      },
+      "tabs": {
+        "incoming": "Vibes Entrantes",
+        "matches": "Coincidencias",
+        "sent": "Vibes Enviados"
+      },
+      "incoming": {
+        "empty": "Aún no hay vibes entrantes. Aparecerán aquí cuando alguien te envíe un vibe.",
+        "sentYouVibe": "Te envió un vibe"
+      },
+      "matches": {
+        "empty": "Una vez que alguien acepte tu vibe, tu coincidencia y un enlace de WhatsApp aparecerán aquí.",
+        "matched": "Hiciste match {time}",
+        "messageOnWhatsApp": "Mensaje en WhatsApp"
+      },
+      "sent": {
+        "empty": "Los vibes que envíes aparecerán aquí con su estado.",
+        "sentVibeTo": "Vibe enviado a",
+        "pending": "Pendiente",
+        "accepted": "aceptado ✨"
+      },
+      "actions": {
+        "unmatch": "Deshacer match",
+        "blockUser": "Bloquear usuario",
+        "accept": "Aceptar",
+        "decline": "Rechazar",
+        "pass": "Pasar",
+        "matchOptions": "Opciones de match"
+      },
+      "confirmations": {
+        "unmatchTitle": "¿Deshacer match con {name}?",
+        "unmatchDescription": "Puedes hacer match de nuevo si ambos envían vibes en el futuro.",
+        "blockTitle": "¿Bloquear a {name}?",
+        "blockDescription": "No podrán verte ni enviarte vibes nunca más. Esto también deshará el match.",
+        "cancel": "Cancelar",
+        "block": "Bloquear"
+      },
+      "whatsapp": {
+        "messageTemplate": "¡Hey! Hicimos match en Social esta noche. Mantengamos el ambiente ✨"
+      }
+    },
+    "requests": {
+      "title": "Solicitudes de canciones",
+      "onboardingRequired": {
+        "title": "Ya casi est\u00e1s",
+        "description": "Completa la configuraci\u00f3n para que el DJ sepa qui\u00e9n est\u00e1 solicitando."
+      },
+      "header": {
+        "subtitle": "Solicita una canci\u00f3n para el ambiente de esta noche.",
+        "description": "Env\u00eda tu solicitud de canci\u00f3n al DJ. La ver\u00e1 en su cola y la incluir\u00e1 en la noche.",
+        "updatesSent": "Las actualizaciones se enviar\u00e1n a"
+      },
+      "form": {
+        "songTitle": "Título de la canción",
+        "songPlaceholder": "Nombre de la pista",
+        "artist": "Artista",
+        "artistOptional": "(opcional)",
+        "artistPlaceholder": "¿Quién la interpreta?",
+        "dedication": "Dedicación o ambiente (opcional)",
+        "dedicationPlaceholder": "¡Suena el coro a medianoche!",
+        "requestsTonight": "{count} solicitudes esta noche",
+        "submit": "Enviar Solicitud",
+        "success": {
+          "title": "¡Solicitud enviada! 🎵",
+          "description": "Tu canción está en la cola. El DJ la verá pronto.",
+          "openWhatsApp": "Abrir WhatsApp (Opcional)"
+        }
+      },
+      "yourRequests": {
+        "title": "Tus solicitudes esta noche",
+        "requestedAt": "Solicitado a las"
+      },
+      "whatsapp": {
+        "messageTemplate": "¡Hey DJ! {name} aquí 👋\nSolicitud de canción: {song}\n{artist}\n{note}"
+      }
+    },
+    "offers": {
+      "title": "Ofertas",
+      "header": {
+        "subtitle": "Especiales de esta noche",
+        "description": "Desde mesas VIP hasta bocados nocturnos, desbloquea los beneficios seleccionados por el equipo del recinto."
+      }
+    },
+    "profile": {
+      "title": "Tu perfil",
+      "onboardingRequired": {
+        "title": "Necesitamos algunos detalles primero",
+        "description": "Completa la configuraci\u00f3n para desbloquear los controles de tu perfil."
+      },
+      "header": {
+        "subtitle": "Tu cuenta",
+        "title": "Controla c\u00f3mo te ven los dem\u00e1s.",
+        "description": "Actualiza tu ambiente, activa la privacidad o ajusta tu biograf\u00eda. El personal puede verificar la informaci\u00f3n cuando sea necesario."
+      },
+      "form": {
+        "profilePhoto": "Foto de perfil",
+        "profilePhotoDescription": "Los invitados ven esto en la parte superior de tu tarjeta. Elige una toma clara y acogedora.",
+        "uploadPhoto": "Subir foto",
+        "adjust": "Ajustar",
+        "remove": "Eliminar",
+        "displayName": "Nombre para mostrar",
+        "phoneNumber": "N\u00famero de tel\u00e9fono",
+        "phoneHelp": "Requerido para enviar vibes y desbloquear el chat de WhatsApp con coincidencias. Formato: +1234567890",
+        "bio": "Biograf\u00eda",
+        "bioPlaceholder": "D\u00e9jales saber a las personas tu ambiente.",
+        "bioHelp": "Compartido cuando tu perfil es p\u00fablico.",
+        "galleryPhotos": "Fotos de galer\u00eda",
+        "galleryDescription": "Mant\u00e9n hasta cuatro fotos. Elimina las que ya no quieras y agrega nuevas a continuaci\u00f3n.",
+        "noGalleryPhotos": "A\u00fan no hay fotos de galer\u00eda. Agrega algunas a continuaci\u00f3n.",
+        "tapToAdd": "Toca para agregar nuevas fotos",
+        "queuedPhotos": "{count} nueva foto{plural} en cola",
+        "galleryHelp": "JPEG o PNG · M\u00e1x. 5 MB cada una · No reemplaza nada hasta que guardes",
+        "newPhotos": "Nuevas Fotos (A\u00fan no guardadas)",
+        "highlights": "Destacados",
+        "highlightsDescription": "Las etiquetas aparecen en tu tarjeta de conexi\u00f3n. Mant\u00e9nlas cortas y contundentes.",
+        "addTag": "Agregar etiqueta",
+        "addAnotherTag": "Agregar otra etiqueta",
+        "tagPlaceholder": "#HouseHead",
+        "favoriteTrackLink": "Enlace de canci\u00f3n favorita",
+        "favoriteTrackPlaceholder": "https://open.spotify.com/track/...",
+        "favoriteTrackHelp": "Comparte un enlace de Spotify o Apple Music para mantener fluyendo la conversaci\u00f3n.",
+        "privateMode": "Modo Privado",
+        "hideFromDeck": "Ocultar de la baraja",
+        "privateDescription": "Cuando est\u00e1 habilitado, no aparecer\u00e1s en la baraja de conexi\u00f3n. A\u00fan puedes navegar por otros y enviar vibes. El personal del recinto siempre tiene acceso por seguridad.",
+        "magicLinkEmails": "Los correos de enlace m\u00e1gico van a {email}. Pregunta al personal si necesitas actualizarlo.",
+        "save": "Guardar perfil",
+        "saving": "Guardando tu perfil...",
+        "success": "Perfil actualizado. Tus cambios están activos."
+      },
+      "alerts": {
+        "maxTags": "Puedes agregar hasta cinco etiquetas destacadas.",
+        "maxGallery": "Puedes mantener hasta cuatro fotos de galer\u00eda.",
+        "fileTooLarge": "Por favor sube una imagen m\u00e1s peque\u00f1a que 5 MB.",
+        "filesTooLarge": "Por favor sube im\u00e1genes m\u00e1s peque\u00f1as que 5 MB. {count} archivo(s) son demasiado grandes."
+      },
+      "crop": {
+        "zoom": "Zoom",
+        "cancel": "Cancelar",
+        "apply": "Aplicar recorte"
+      }
+    },
+    "signOut": {
+      "title": "Cerrar sesi\u00f3n",
+      "signedInAs": "Sesión iniciada como",
+      "description": "Puedes cerrar sesi\u00f3n de Social de forma segura. Necesitar\u00e1s un nuevo enlace m\u00e1gico para regresar.",
+      "button": "Cerrar sesi\u00f3n ahora",
+      "cancel": "Olv\u00eddalo, volver a la aplicaci\u00f3n"
+    }
+  },
+  "auth": {
+    "signIn": {
+      "title": "Iniciar sesi\u00f3n",
+      "header": {
+        "title": "Inicia sesi\u00f3n en {venue}",
+        "description": "Ingresa tu correo electr\u00f3nico para recibir un enlace m\u00e1gico. Sin contrase\u00f1as, solo ambiente."
+      },
+      "form": {
+        "email": "Correo electr\u00f3nico",
+        "emailPlaceholder": "tu@correo.com",
+        "otp": "OTP",
+        "submit": "Enviar enlace m\u00e1gico",
+        "submitting": "Enviando enlace m\u00e1gico...",
+        "success": "Enlace m\u00e1gico enviado. Revisa tu bandeja de entrada para continuar.",
+        "errors": {
+          "emailRequired": "Por favor ingresa una direcci\u00f3n de correo electr\u00f3nico.",
+          "generic": "Ocurri\u00f3 un error. Por favor intenta de nuevo."
+        }
+      },
+      "errors": {
+        "adminEmail": "Las cuentas de administrador deben usar /sign-in/admin",
+        "noActiveSession": "No se encontr\u00f3 ninguna sesi\u00f3n activa. Por favor selecciona un recinto."
+      },
+      "links": {
+        "changeVenue": "\u2190 Cambiar recinto",
+        "venueStaff": "\u00bfPersonal del recinto?"
+      }
+    },
+    "adminSignIn": {
+      "title": "Inicio de sesi\u00f3n de administrador",
+      "adminAccess": "Acceso de administrador",
+      "header": {
+        "title": "Panel del recinto",
+        "description": "Inicia sesi\u00f3n con tus credenciales de administrador para gestionar tu recinto."
+      },
+      "form": {
+        "email": "Correo electr\u00f3nico",
+        "emailPlaceholder": "admin@recinto.com",
+        "password": "Contrase\u00f1a",
+        "passwordPlaceholder": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+        "submit": "Iniciar sesi\u00f3n como administrador",
+        "submitting": "Iniciando sesi\u00f3n...",
+        "errors": {
+          "emailPasswordRequired": "Se requiere correo electr\u00f3nico y contrase\u00f1a",
+          "invalidCredentials": "Correo electr\u00f3nico o contrase\u00f1a inv\u00e1lidos",
+          "accountNotConfigured": "La cuenta de administrador no est\u00e1 configurada correctamente.",
+          "sessionFailed": "Error al crear la sesi\u00f3n. Por favor intenta de nuevo.",
+          "authFailed": "Error de autenticaci\u00f3n. Por favor intenta de nuevo.",
+          "generic": "Ocurri\u00f3 un error. Por favor intenta de nuevo."
+        }
+      },
+      "errors": {
+        "invalidCredentials": "Correo electr\u00f3nico o contrase\u00f1a inv\u00e1lidos",
+        "notAdmin": "Esta cuenta no tiene acceso de administrador",
+        "authError": "Error de autenticaci\u00f3n. Por favor intenta de nuevo."
+      },
+      "links": {
+        "guestSignIn": "\u2190 Iniciar sesi\u00f3n como invitado"
+      }
+    },
+    "onboarding": {
+      "back": "\u2190 Atr\u00e1s",
+      "stepIndicator": "Paso 1 de 1",
+      "header": {
+        "subtitle": "Paso 1 \u00b7 Configuraci\u00f3n del perfil",
+        "title": "Ya casi est\u00e1s. Dile al recinto qui\u00e9n eres.",
+        "description": "Tu nombre y edad permanecen privados con el equipo del recinto. Los invitados solo ven lo que haces p\u00fablico."
+      },
+      "form": {
+        "displayName": "Nombre para mostrar",
+        "displayNamePlaceholder": "Tu nombre de ambiente",
+        "age": "Edad",
+        "agePlaceholder": "21",
+        "phoneNumber": "N\u00famero de tel\u00e9fono",
+        "phoneOptional": "(opcional)",
+        "phonePlaceholder": "+1234567890",
+        "phoneHelp": "Requerido para enviar vibes y desbloquear el chat de WhatsApp con coincidencias. Formato: +1234567890",
+        "bio": "Biograf\u00eda (opcional)",
+        "bioPlaceholder": "Escribe algo para romper el hielo.",
+        "profilePhoto": "Foto de perfil",
+        "profilePhotoDescription": "Se muestra en tu tarjeta de conexi\u00f3n. Elige una toma clara—no se necesitan filtros.",
+        "uploadPhoto": "Subir foto",
+        "adjust": "Ajustar",
+        "remove": "eliminar",
+        "idPhoto": "Foto de ID (uso interno)",
+        "idPhotoDescription": "Solo el personal del recinto puede ver esto. Sube una identificaci\u00f3n emitida por el gobierno o un pasaporte para que podamos verificarte r\u00e1pidamente si es necesario.",
+        "tapToUpload": "Toca para subir tu foto de ID",
+        "idPhotoHelp": "JPEG o PNG \u00b7 M\u00e1x. 5 MB",
+        "idPhotoTips": "Consejos: cara visible \u00b7 sin reflejos \u00b7 sin filtros",
+        "adjustPhoto": "Ajustar foto",
+        "galleryPhotos": "Fotos de galer\u00eda (opcional)",
+        "galleryDescription": "Agrega hasta cuatro tomas de ambiente. Se colocar\u00e1n detr\u00e1s de tu tarjeta en la baraja de conexi\u00f3n.",
+        "tapToAdd": "Toca para agregar fotos de galer\u00eda",
+        "selectedPhotos": "Seleccionada{plural} {count} foto{plural}",
+        "galleryHelp": "JPEG o PNG \u00b7 M\u00e1x. 5 MB cada una",
+        "highlights": "Destacados",
+        "highlightsDescription": "Las etiquetas aparecen en tu tarjeta de conexi\u00f3n. Mant\u00e9nlas cortas y contundentes.",
+        "addTag": "Agregar etiqueta",
+        "addAnotherTag": "Agregar otra etiqueta",
+        "tagPlaceholder": "#HouseHead",
+        "favoriteTrack": "Enlace de canci\u00f3n favorita (opcional)",
+        "favoriteTrackPlaceholder": "https://open.spotify.com/track/...",
+        "favoriteTrackHelp": "Comparte un enlace de Spotify o Apple Music para mantener fluyendo la conversaci\u00f3n.",
+        "privateMode": "Modo Privado",
+        "privateDescription": "Cuando est\u00e1 habilitado, no aparecer\u00e1s en la baraja de conexi\u00f3n. A\u00fan puedes navegar por otros y enviar vibes. El personal del recinto siempre tiene acceso por seguridad.",
+        "magicLinkEmails": "Enviaremos enlaces m\u00e1gicos a {email}",
+        "save": "Guardar perfil",
+        "saving": "Guardando tu perfil...",
+        "success": "Perfil guardado. Est\u00e1s listo para conectar una vez que se abran las puertas del recinto."
+      },
+      "crop": {
+        "zoom": "Zoom",
+        "cancel": "Cancelar",
+        "apply": "Aplicar Recorte"
+      },
+      "alerts": {
+        "fileTooLarge": "Por favor sube una imagen m\u00e1s peque\u00f1a que 5 MB.",
+        "maxGallery": "Selecciona hasta 4 fotos.",
+        "maxTags": "Puedes agregar hasta cinco etiquetas destacadas.",
+        "filesTooLarge": "Por favor sube im\u00e1genes m\u00e1s peque\u00f1as que 5 MB. {count} archivo(s) son demasiado grandes."
+      }
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "loading": "Cargando panel\u2026",
+      "cards": {
+        "currentAttendance": "Asistencia actual",
+        "matchesToday": "Coincidencias hoy",
+        "songRequests": "Solicitudes de canciones",
+        "newCustomers": "Nuevos clientes"
+      },
+      "chart": {
+        "title": "Tendencia de asistencia",
+        "description": "Rastrea los registros en ventanas seleccionables para entender tus horas m\u00e1s ocupadas.",
+        "ranges": {
+          "12h": "\u00daltimas 12 horas",
+          "24h": "\u00daltimas 24 horas",
+          "7d": "\u00daltimos 7 d\u00edas"
+        },
+        "emptyState": "A\u00fan no hay datos de asistencia para este rango."
+      }
+    },
+    "users": {
+      "title": "Invitados",
+      "description": "Gestiona qui\u00e9n est\u00e1 actualmente en el recinto y bloquea invitados problem\u00e1ticos.",
+      "profilesCount": "perfiles",
+      "status": {
+        "active": "Activo",
+        "offline": "Desconectado",
+        "blocked": "Bloqueado",
+        "private": "Privado",
+        "public": "P\u00fablico"
+      },
+      "block": {
+        "duration": {
+          "1h": "1 hora",
+          "24h": "24 horas",
+          "7d": "7 d\u00edas",
+          "permanent": "Permanente"
+        },
+        "reasonPlaceholder": "Raz\u00f3n",
+        "button": "Bloquear",
+        "unblock": "Desbloquear",
+        "reasonLabel": "Raz\u00f3n"
+      },
+      "messages": {
+        "updated": "Estado del invitado actualizado.",
+        "lastSeen": "Visto por \u00faltima vez",
+        "unknown": "Desconocido"
+      }
+    },
+    "requests": {
+      "title": "Cola de solicitudes de canciones",
+      "description": "Rastrea las solicitudes de WhatsApp y m\u00e1rcalas como completadas una vez reproducidas.",
+      "table": {
+        "request": "Solicitud",
+        "guest": "Invitado",
+        "status": "Estado",
+        "actions": "Acciones"
+      },
+      "actions": {
+        "openChat": "Abrir chat",
+        "markPlayed": "Marcar como reproducida",
+        "cancel": "Cancelar"
+      }
+    },
+    "offers": {
+      "title": "Ofertas",
+      "description": "Activa promociones del recinto sobre la marcha. Usa mayor prioridad para destacar ofertas clave.",
+      "createHeading": "Crear nueva oferta",
+      "form": {
+        "title": "T\u00edtulo",
+        "titlePlaceholder": "C\u00f3cteles mitad de precio",
+        "description": "Descripci\u00f3n",
+        "descriptionPlaceholder": "Comparte detalles sobre la oferta y cualquier letra peque\u00f1a.",
+        "start": "Inicio",
+        "end": "Fin",
+        "ctaLabel": "Etiqueta CTA",
+        "ctaLabelPlaceholder": "Ver men\u00fa",
+        "ctaUrl": "Enlace CTA",
+        "ctaUrlPlaceholder": "https://ejemplo.com/menu",
+        "promoCode": "C\u00f3digo promocional",
+        "promoCodePlaceholder": "SOCIAL50",
+        "imageUrl": "URL de imagen",
+        "imageUrlPlaceholder": "https://...",
+        "priority": "Prioridad",
+        "priorityDescription": "Los n\u00fameros m\u00e1s altos aparecen primero en la aplicaci\u00f3n de invitados.",
+        "isActive": "La oferta est\u00e1 activa",
+        "submit": "Guardar oferta",
+        "create": "Crear oferta",
+        "update": "Actualizar oferta"
+      },
+      "status": {
+        "active": "Activa",
+        "inactive": "Inactiva"
+      },
+      "actions": {
+        "preview": "Vista previa de la oferta",
+        "activate": "Activar",
+        "deactivate": "Desactivar",
+        "delete": "Eliminar"
+      },
+      "stats": {
+        "savedBy": "Guardado por {count} invitados",
+        "redeemed": "Canjeado {count} veces",
+        "promoCode": "C\u00f3digo promocional",
+        "lastSaved": "Guardado por \u00faltima vez por {guest} a las {time}",
+        "priority": "Prioridad",
+        "start": "Inicio",
+        "now": "Ahora"
+      },
+      "details": {
+        "guestSaves": "Guardados de invitados ({count})",
+        "editOffer": "Editar detalles de la oferta",
+        "noSaves": "A\u00fan no hay invitados que hayan guardado esta oferta."
+      },
+      "emptyState": "A\u00fan no se han creado ofertas.",
+      "messages": {
+        "created": "Oferta creada.",
+        "updated": "Oferta actualizada.",
+        "saved": "Oferta guardada."
+      },
+      "redemption": {
+        "saved": "Guardado",
+        "redeemed": "Canjeado",
+        "markRedeemed": "Marcar como canjeado",
+        "undoRedeem": "Deshacer canje"
+      }
+    },
+    "settings": {
+      "title": "Configuraci\u00f3n",
+      "tabs": {
+        "venueCustomization": "Personalizaci\u00f3n del recinto",
+        "sessionConfiguration": "Configuraci\u00f3n de sesi\u00f3n"
+      },
+      "venue": {
+        "title": "Personalizaci\u00f3n del recinto",
+        "description": "Actualiza los detalles visibles para invitados, sube fotos de la galer\u00eda y gestiona tu informaci\u00f3n de contacto.",
+        "fields": {
+          "venueName": "Nombre del recinto",
+          "capacity": "Capacidad",
+          "capacityPlaceholder": "ej., 200",
+          "description": "Descripci\u00f3n",
+          "descriptionPlaceholder": "Cu\u00e9ntales a los invitados sobre tu ambiente...",
+          "address": "Direcci\u00f3n",
+          "addressPlaceholder": "Calle Principal 123, Ciudad",
+          "website": "Sitio web",
+          "websitePlaceholder": "https://",
+          "instagram": "Instagram",
+          "instagramPlaceholder": "@tucubosocial",
+          "phoneNumber": "N\u00famero de tel\u00e9fono",
+          "phonePlaceholder": "+1 555 555 5555",
+          "amenities": "Servicios (separados por comas)",
+          "amenitiesPlaceholder": "WiFi, Asientos al aire libre, Sal\u00f3n VIP",
+          "venueLogo": "Logo del recinto",
+          "logoDescription": "Sube un logo cuadrado para listas de invitados y p\u00e1ginas QR.",
+          "coverImage": "Imagen de portada",
+          "coverDescription": "Foto panor\u00e1mica utilizada para onboarding y vistas previas de configuraci\u00f3n.",
+          "venueGallery": "Galer\u00eda del recinto",
+          "galleryDescription": "Comparte hasta {max} destacados. Los invitados ver\u00e1n estos en la p\u00e1gina de inicio.",
+          "uploadImages": "Subir im\u00e1genes",
+          "remove": "Eliminar",
+          "noGalleryImages": "A\u00fan no hay im\u00e1genes en la galer\u00eda. Sube algunas para mostrar tu recinto.",
+          "currentLogo": "Logo actual",
+          "replaceLogo": "Sube un archivo nuevo para reemplazarlo."
+        },
+        "qr": {
+          "title": "C\u00f3digo QR del recinto",
+          "description": "Genera un c\u00f3digo QR que los invitados pueden escanear para abrir la p\u00e1gina de inicio de sesi\u00f3n de tu recinto al instante.",
+          "generating": "Generando\u2026",
+          "regenerate": "Regenerar QR",
+          "generate": "Generar QR",
+          "preview": "Genera un c\u00f3digo QR para previsualizarlo aqu\u00ed.",
+          "download": "Descargar c\u00f3digo QR",
+          "displayFullscreen": "Mostrar QR en pantalla completa",
+          "signInLink": "Enlace de inicio de sesi\u00f3n",
+          "unavailable": "No disponible \u2014 actualiza despu\u00e9s de guardar la configuraci\u00f3n del recinto.",
+          "scanTitle": "Escanear para unirse a {venueName}",
+          "scanDescription": "Apunta tu c\u00e1mara al c\u00f3digo QR de abajo para abrir Social y entrar directamente a {venueName}.",
+          "orVisit": "O visita",
+          "venueLinkUnavailable": "El enlace del recinto no est\u00e1 disponible. Guarda los detalles del recinto y actualiza la p\u00e1gina.",
+          "qrError": "No se pudo generar el c\u00f3digo QR. Por favor, int\u00e9ntalo de nuevo."
+        },
+        "actions": {
+          "save": "Guardar configuraci\u00f3n del recinto",
+          "saving": "Guardando\u2026"
+        },
+        "messages": {
+          "saved": "Configuraci\u00f3n del recinto guardada."
+        }
+      },
+      "session": {
+        "title": "Configuraci\u00f3n de sesi\u00f3n",
+        "description": "La duraci\u00f3n de la sesi\u00f3n controla cu\u00e1nto tiempo pueden permanecer conectados los invitados. Cuando el temporizador termina, todos los invitados son devueltos a la p\u00e1gina de inicio.",
+        "fields": {
+          "sessionName": "Nombre de la sesi\u00f3n",
+          "sessionNamePlaceholder": "Vibes del viernes por la noche",
+          "sessionDescription": "Descripci\u00f3n de la sesi\u00f3n",
+          "sessionDescriptionPlaceholder": "Destaca DJs, ofertas de bebidas o cualquier otra cosa que los invitados deban saber.",
+          "duration": "Duraci\u00f3n",
+          "durationHelp": "M\u00ednimo 1 hora, m\u00e1ximo 1 semana. Los invitados ser\u00e1n desconectados cuando este temporizador llegue a cero.",
+          "sessionType": "Tipo de sesi\u00f3n",
+          "entryFee": "Tarifa de entrada",
+          "entryFeePlaceholder": "0.00",
+          "entryFeeHelp": "D\u00e9jalo en blanco si la sesi\u00f3n es gratuita para los invitados.",
+          "status": "Estado",
+          "statusActive": "Activa \u2014 los invitados est\u00e1n conectados actualmente.",
+          "statusInactive": "Inactiva \u2014 activa para permitir que los invitados se unan."
+        },
+        "durationOptions": {
+          "1": "1 hora",
+          "2": "2 horas",
+          "3": "3 horas",
+          "4": "4 horas",
+          "6": "6 horas",
+          "8": "8 horas",
+          "12": "12 horas",
+          "24": "24 horas (1 d\u00eda)",
+          "48": "48 horas (2 d\u00edas)",
+          "72": "72 horas (3 d\u00edas)",
+          "168": "168 horas (1 semana)"
+        },
+        "sessionTypes": {
+          "event": "Evento especial",
+          "daily": "Sesi\u00f3n diaria",
+          "weekly": "Sesi\u00f3n semanal",
+          "custom": "Personalizado"
+        },
+        "infoBox": {
+          "title": "C\u00f3mo funciona el tiempo de sesi\u00f3n",
+          "points": {
+            "1": "Los invitados solo pueden iniciar sesi\u00f3n durante una sesi\u00f3n activa.",
+            "2": "Cuando el temporizador llega a cero, los invitados son redirigidos a la p\u00e1gina de inicio.",
+            "3": "Los c\u00f3digos QR y la selecci\u00f3n manual del recinto est\u00e1n bloqueados hasta que una sesi\u00f3n vuelva a estar activa."
+          }
+        },
+        "actions": {
+          "save": "Guardar configuraci\u00f3n de sesi\u00f3n",
+          "saving": "Guardando\u2026",
+          "activate": "Activar sesi\u00f3n",
+          "deactivate": "Desactivar sesi\u00f3n"
+        },
+        "messages": {
+          "saved": "Configuraci\u00f3n de sesi\u00f3n guardada.",
+          "activated": "Sesi\u00f3n activada.",
+          "deactivated": "Sesi\u00f3n desactivada."
+        }
+      }
+    },
+    "signOut": {
+      "title": "Cerrar sesión",
+      "signedInAs": "Sesión iniciada como",
+      "description": "Puedes cerrar sesión de forma segura del panel de administración. Necesitarás iniciar sesión nuevamente para regresar.",
+      "button": "Cerrar sesión ahora",
+      "cancel": "Olvídalo, permanecer en el panel"
+    },
+    "onboarding": {
+      "title": "Configuraci\u00f3n de administrador",
+      "header": {
+        "adminSetup": "Configuraci\u00f3n de administrador"
+      },
+      "steps": {
+        "venue": {
+          "label": "Configuraci\u00f3n del recinto",
+          "number": "1"
+        },
+        "session": {
+          "label": "Configuraci\u00f3n de sesi\u00f3n",
+          "number": "2"
+        },
+        "profile": {
+          "label": "Tu perfil",
+          "number": "3"
+        }
+      },
+      "venue": {
+        "title": "\u00a1Bienvenido a Social! \ud83c\udf89",
+        "description": "Configuremos tu recinto. Esta informaci\u00f3n ser\u00e1 visible para los invitados.",
+        "fields": {
+          "venueName": "Nombre del recinto",
+          "venueNamePlaceholder": "ej., El B\u00faho Nocturno",
+          "description": "Descripci\u00f3n",
+          "descriptionPlaceholder": "Cu\u00e9ntales a los invitados sobre el ambiente de tu recinto...",
+          "logo": "Logo del recinto",
+          "logoPreview": "Vista previa del logo",
+          "address": "Direcci\u00f3n",
+          "addressPlaceholder": "Calle Principal 123, Ciudad, Estado",
+          "capacity": "Capacidad",
+          "capacityPlaceholder": "200"
+        },
+        "fileStatus": {
+          "noFile": "No se eligi\u00f3 archivo",
+          "existing": "Logo existente"
+        },
+        "actions": {
+          "back": "\u2190 Atr\u00e1s",
+          "continue": "Continuar a configuraci\u00f3n de sesi\u00f3n",
+          "saving": "Guardando..."
+        }
+      },
+      "session": {
+        "title": "Configura tu sesi\u00f3n \u23f0",
+        "description": "Configura cu\u00e1nto tiempo pueden conectarse los invitados en {venueName}",
+        "fields": {
+          "sessionName": "Nombre de la sesi\u00f3n",
+          "sessionNamePlaceholder": "ej., Vibes del viernes por la noche",
+          "description": "Descripci\u00f3n",
+          "descriptionPlaceholder": "\u00bfQu\u00e9 tiene de especial esta noche?",
+          "duration": "Duraci\u00f3n (horas)",
+          "sessionType": "Tipo de sesi\u00f3n"
+        },
+        "durationOptions": {
+          "1": "1 hora",
+          "2": "2 horas",
+          "3": "3 horas",
+          "4": "4 horas",
+          "6": "6 horas",
+          "8": "8 horas",
+          "12": "12 horas",
+          "24": "24 horas (1 d\u00eda)",
+          "48": "48 horas (2 d\u00edas)",
+          "72": "72 horas (3 d\u00edas)",
+          "168": "168 horas (1 semana)"
+        },
+        "durationHelp": "M\u00ednimo 1 hora, m\u00e1ximo 1 semana. Despu\u00e9s de que termine la sesi\u00f3n, las cuentas de invitados se desactivar\u00e1n autom\u00e1ticamente.",
+        "sessionTypes": {
+          "event": "Evento especial",
+          "daily": "Sesi\u00f3n diaria",
+          "weekly": "Sesi\u00f3n semanal",
+          "custom": "Personalizado"
+        },
+        "infoBox": {
+          "title": "\ud83d\udca1 C\u00f3mo funcionan las sesiones",
+          "points": {
+            "1": "Los invitados solo pueden conectarse durante sesiones activas",
+            "2": "Despu\u00e9s de que termine una sesi\u00f3n, las cuentas de invitados se desactivar\u00e1n autom\u00e1ticamente",
+            "3": "Puedes crear una nueva sesi\u00f3n en cualquier momento desde el panel de administraci\u00f3n",
+            "4": "Cada recinto solo puede tener una sesi\u00f3n activa a la vez"
+          }
+        },
+        "actions": {
+          "back": "\u2190 Atr\u00e1s",
+          "continue": "Continuar a configuraci\u00f3n de perfil",
+          "creating": "Creando sesi\u00f3n..."
+        }
+      },
+      "profile": {
+        "title": "\u00a1Ya casi est\u00e1s! \ud83d\udc64",
+        "description": "Configura tu perfil de administrador. Este tambi\u00e9n es tu perfil de invitado si apareces en el feed.",
+        "fields": {
+          "avatar": "Foto de perfil",
+          "avatarHelp": "Se recomienda foto cuadrada. M\u00e1x. 5MB.",
+          "displayName": "Nombre para mostrar",
+          "displayNamePlaceholder": "\u00bfC\u00f3mo deber\u00edan verte los invitados?",
+          "bio": "Biograf\u00eda (Opcional)",
+          "bioPlaceholder": "Cu\u00e9ntales un poco sobre ti a los invitados..."
+        },
+        "fileStatus": {
+          "noFile": "No se eligi\u00f3 archivo",
+          "existing": "Foto existente"
+        },
+        "crop": {
+          "zoom": "Zoom",
+          "cancel": "Cancelar",
+          "apply": "Aplicar recorte"
+        },
+        "actions": {
+          "back": "\u2190 Atr\u00e1s",
+          "complete": "Completar configuraci\u00f3n e ir al panel",
+          "completing": "Completando configuraci\u00f3n..."
+        }
+      }
+    }
+  }
+}
+

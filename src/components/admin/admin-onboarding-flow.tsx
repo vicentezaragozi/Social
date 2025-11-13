@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "@/i18n";
 import { VenueSetupStep } from "./onboarding/venue-setup-step";
 import { SessionSetupStep } from "./onboarding/session-setup-step";
 import { AdminProfileStep } from "./onboarding/admin-profile-step";
 import { SocialWordmark } from "@/components/brand/social-wordmark";
+import { useFormStatePreservation } from "@/hooks/use-form-state-preservation";
 
 type OnboardingStep = "venue" | "session" | "profile";
 
@@ -75,6 +78,8 @@ export function AdminOnboardingFlow({
   sessionMetadata,
   userEmail,
 }: AdminOnboardingFlowProps) {
+  const router = useRouter();
+  const locale = useLocale();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(initialStep);
   const [venue, setVenue] = useState<Venue>(initialVenue);
   const [venueDraft, setVenueDraft] = useState<VenueDraft>({
@@ -113,6 +118,27 @@ export function AdminOnboardingFlow({
   const handleProfileDraftChange = (updates: Partial<ProfileDraft>) => {
     setProfileDraft((prev) => ({ ...prev, ...updates }));
   };
+
+  // Form state preservation across locale changes
+  const controlledState = {
+    currentStep,
+    venueDraft,
+    sessionDraft,
+    profileDraft,
+  };
+
+  const { clearSavedState } = useFormStatePreservation<typeof controlledState>(
+    "admin-onboarding-form",
+    controlledState,
+    (restored: typeof controlledState) => {
+      if (restored.currentStep !== undefined) setCurrentStep(restored.currentStep);
+      if (restored.venueDraft !== undefined) setVenueDraft(restored.venueDraft);
+      if (restored.sessionDraft !== undefined) setSessionDraft(restored.sessionDraft);
+      if (restored.profileDraft !== undefined) setProfileDraft(restored.profileDraft);
+    }
+  );
+
+  // Clear saved state when onboarding is complete (handled in AdminProfileStep)
   
   // Handler to go to next step
   const handleVenueComplete = (updatedVenue: Venue) => {
@@ -150,10 +176,13 @@ export function AdminOnboardingFlow({
     }
   };
 
+  const t = useTranslations("admin.onboarding");
+  const tSteps = useTranslations("admin.onboarding.steps");
+  
   const steps = [
-    { id: "venue", label: "Venue Setup", number: 1 },
-    { id: "session", label: "Session Config", number: 2 },
-    { id: "profile", label: "Your Profile", number: 3 },
+    { id: "venue", label: tSteps("venue.label"), number: tSteps("venue.number") },
+    { id: "session", label: tSteps("session.label"), number: tSteps("session.number") },
+    { id: "profile", label: tSteps("profile.label"), number: tSteps("profile.number") },
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
@@ -167,7 +196,7 @@ export function AdminOnboardingFlow({
             <SocialWordmark className="text-2xl" />
             <div className="h-6 w-px bg-white/10" />
             <span className="text-sm font-medium uppercase tracking-[0.2em] text-[#6b9eff]">
-              Admin Setup
+              {t("header.adminSetup")}
             </span>
           </div>
           <div className="text-xs text-[var(--muted)]">{userEmail}</div>
@@ -259,8 +288,16 @@ export function AdminOnboardingFlow({
               draft={profileDraft}
               onDraftChange={handleProfileDraftChange}
               onComplete={() => {
+                // Clear saved form state before redirecting
+                clearSavedState();
                 // Redirect after successful profile setup
-                window.location.href = "/admin";
+                // Extract locale from current pathname to ensure correct redirect
+                if (typeof window !== "undefined") {
+                  const currentPath = window.location.pathname;
+                  const pathLocale = currentPath.split('/').filter(Boolean)[0] || locale || 'en';
+                  // Use window.location to avoid router locale handling issues
+                  window.location.href = `/${pathLocale}/admin`;
+                }
               }}
               onBack={handleBack}
               canGoBack={true}

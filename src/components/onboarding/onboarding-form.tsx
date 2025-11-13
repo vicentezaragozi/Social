@@ -2,13 +2,16 @@
 
 import Image from "next/image";
 import Cropper, { type Area } from "react-easy-crop";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "@/i18n";
 
-import { completeOnboarding, type OnboardingState } from "@/app/(guest)/onboarding/actions";
+import { completeOnboarding, type OnboardingState } from "@/app/[locale]/(guest)/onboarding/actions";
 import { getCroppedDataUrl, type PixelCrop } from "@/lib/image";
 import { cn } from "@/lib/utils";
+import { useFormStatePreservation } from "@/hooks/use-form-state-preservation";
 
 const CROPPER_ASPECT = 3 / 4;
 const AVATAR_ASPECT = 1;
@@ -30,6 +33,7 @@ const initialState: OnboardingState = {};
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const t = useTranslations("auth.onboarding.form");
 
   return (
     <button
@@ -41,7 +45,7 @@ function SubmitButton() {
       )}
     >
       <span className="relative z-10">
-        {pending ? "Saving your profile..." : "Save profile"}
+        {pending ? t("saving") : t("save")}
       </span>
       <div className="absolute inset-0 translate-y-full bg-[var(--accent-strong)] transition group-hover:translate-y-0" />
     </button>
@@ -49,7 +53,12 @@ function SubmitButton() {
 }
 
 export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDefaults }) {
+  const router = useRouter();
+  const locale = useLocale();
   const [state, formAction] = useActionState(completeOnboarding, initialState);
+  const t = useTranslations("auth.onboarding.form");
+  const tAlerts = useTranslations("auth.onboarding.alerts");
+  const tCrop = useTranslations("auth.onboarding.crop");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [rawImage, setRawImage] = useState<string | null>(null);
@@ -68,6 +77,42 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>(defaultValues.highlight_tags ?? []);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Form state preservation across locale changes
+  const controlledState = {
+    previewUrl,
+    fileName,
+    rawImage,
+    croppedImage,
+    avatarPreview,
+    avatarRawImage,
+    avatarCroppedImage,
+    galleryPreviews,
+    tags,
+    tagInput,
+  };
+  
+  const { clearSavedState } = useFormStatePreservation<typeof controlledState>(
+    "onboarding-form",
+    controlledState,
+    null,
+    {
+      formRef,
+      onRestore: (restored: typeof controlledState) => {
+        if (restored.previewUrl !== undefined) setPreviewUrl(restored.previewUrl);
+        if (restored.fileName !== undefined) setFileName(restored.fileName);
+        if (restored.rawImage !== undefined) setRawImage(restored.rawImage);
+        if (restored.croppedImage !== undefined) setCroppedImage(restored.croppedImage);
+        if (restored.avatarPreview !== undefined) setAvatarPreview(restored.avatarPreview);
+        if (restored.avatarRawImage !== undefined) setAvatarRawImage(restored.avatarRawImage);
+        if (restored.avatarCroppedImage !== undefined) setAvatarCroppedImage(restored.avatarCroppedImage);
+        if (restored.galleryPreviews !== undefined) setGalleryPreviews(restored.galleryPreviews);
+        if (restored.tags !== undefined) setTags(restored.tags);
+        if (restored.tagInput !== undefined) setTagInput(restored.tagInput);
+      },
+    }
+  );
 
   useEffect(
     () => () => {
@@ -79,9 +124,50 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
   useEffect(() => {
     if (!state.success) return;
     if (typeof window === "undefined") return;
-    window.localStorage.removeItem(CONNECT_COACHMARK_KEY);
-    window.localStorage.removeItem(CONNECT_TOOLTIP_KEY);
-  }, [state.success]);
+    
+    // Clear saved form state on successful submission
+    clearSavedState();
+    
+    // Small delay to ensure locale is available
+    const redirectTimer = setTimeout(() => {
+      window.localStorage.removeItem(CONNECT_COACHMARK_KEY);
+      window.localStorage.removeItem(CONNECT_TOOLTIP_KEY);
+      
+      // Get locale from useLocale hook (most reliable)
+      const hookLocale = locale;
+      
+      // Also extract from pathname as backup
+      const currentPath = window.location.pathname;
+      const pathParts = currentPath.split('/').filter(Boolean);
+      const pathLocale = pathParts[0];
+      
+      // Determine valid locale with strict validation
+      let validLocale: string = 'en'; // Default fallback
+      
+      // Priority 1: Hook locale
+      if (hookLocale && typeof hookLocale === 'string' && ['en', 'es'].includes(hookLocale)) {
+        validLocale = hookLocale;
+      }
+      // Priority 2: Pathname locale
+      else if (pathLocale && typeof pathLocale === 'string' && ['en', 'es'].includes(pathLocale)) {
+        validLocale = pathLocale;
+      }
+      // Priority 3: Default to 'en'
+      else {
+        validLocale = 'en';
+      }
+      
+      // Final safety check - ensure it's never undefined or invalid
+      if (!validLocale || typeof validLocale !== 'string' || validLocale === 'undefined' || !['en', 'es'].includes(validLocale)) {
+        validLocale = 'en';
+      }
+      
+      // Use window.location for full page navigation
+      window.location.href = `/${validLocale}/app`;
+    }, 100); // Small delay to ensure React has finished rendering
+    
+    return () => clearTimeout(redirectTimer);
+  }, [state.success, locale, clearSavedState]);
 
   const handleFileChange = (file: File | undefined) => {
     if (!file) {
@@ -93,7 +179,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Please upload an image smaller than 5 MB.");
+      alert(tAlerts("fileTooLarge"));
       return;
     }
 
@@ -181,7 +267,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
       return;
     }
     if (files.length > 4) {
-      alert("Select up to 4 photos.");
+      alert(tAlerts("maxGallery"));
       event.target.value = "";
       setGalleryPreviews([]);
       return;
@@ -191,7 +277,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
     const maxSize = 5 * 1024 * 1024; // 5MB
     const oversizedFiles = Array.from(files).filter(file => file.size > maxSize);
     if (oversizedFiles.length > 0) {
-      alert(`Please upload images smaller than 5 MB. ${oversizedFiles.length} file(s) are too large.`);
+      alert(tAlerts("filesTooLarge", { count: oversizedFiles.length }));
       event.target.value = "";
       setGalleryPreviews([]);
       return;
@@ -206,7 +292,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
     if (!value) return;
     const normalized = value.startsWith("#") ? value : `#${value}`;
     if (tags.length >= 5) {
-      alert("You can add up to five highlight tags.");
+      alert(tAlerts("maxTags"));
       return;
     }
     if (tags.some((tag) => tag.toLowerCase() === normalized.toLowerCase())) {
@@ -234,6 +320,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
 
   return (
     <form
+      ref={formRef}
       action={formAction}
       className="space-y-6 rounded-[32px] border border-[#1d2946] bg-[var(--surface)]/85 p-5 shadow-xl shadow-black/30 backdrop-blur sm:p-6"
     >
@@ -249,14 +336,14 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
             htmlFor="display_name"
             className="block text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]"
           >
-            Display name
+            {t("displayName")}
           </label>
           <input
             id="display_name"
             name="display_name"
             required
             defaultValue={defaultValues.display_name}
-            placeholder="Your vibe name"
+            placeholder={t("displayNamePlaceholder")}
             className="mt-2 w-full rounded-2xl border border-[#233050] bg-[var(--surface-raised)] px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 sm:text-base"
           />
         </div>
@@ -265,7 +352,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
             htmlFor="age"
             className="block text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]"
           >
-            Age
+            {t("age")}
           </label>
           <input
             id="age"
@@ -274,7 +361,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
             min={18}
             required
             defaultValue={defaultValues.age}
-            placeholder="21"
+            placeholder={t("agePlaceholder")}
             className="mt-2 w-full rounded-2xl border border-[#233050] bg-[var(--surface-raised)] px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 sm:text-base"
           />
         </div>
@@ -283,17 +370,17 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
             htmlFor="phone_number"
             className="block text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]"
           >
-            Phone number <span className="text-xs normal-case tracking-normal">(optional)</span>
+            {t("phoneNumber")} <span className="text-xs normal-case tracking-normal">{t("phoneOptional")}</span>
           </label>
           <input
             id="phone_number"
             name="phone_number"
             type="tel"
-            placeholder="+1234567890"
+            placeholder={t("phonePlaceholder")}
             className="mt-2 w-full rounded-2xl border border-[#233050] bg-[var(--surface-raised)] px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 sm:text-base"
           />
           <p className="mt-1.5 text-xs text-[var(--muted)]">
-            Required to send vibes and unlock WhatsApp chat with matches. Format: +1234567890
+            {t("phoneHelp")}
           </p>
         </div>
         <div>
@@ -301,7 +388,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
             htmlFor="bio"
             className="block text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]"
           >
-            Bio (optional)
+            {t("bio")}
           </label>
           <textarea
             id="bio"
@@ -309,7 +396,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
             maxLength={240}
             rows={3}
             defaultValue={defaultValues.bio ?? ""}
-            placeholder="Drop a line to break the ice."
+            placeholder={t("bioPlaceholder")}
             className="mt-2 w-full rounded-2xl border border-[#233050] bg-[var(--surface-raised)] px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
           />
         </div>
@@ -333,15 +420,15 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
           </div>
           <div className="flex-1 space-y-2 text-xs text-[var(--muted)]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8796c6]">
-              Profile photo
+              {t("profilePhoto")}
             </p>
-            <p>Shows on your connect card. Choose a clear shot—no filters needed.</p>
+            <p>{t("profilePhotoDescription")}</p>
             <div className="flex flex-wrap gap-2">
               <label
                 htmlFor="avatar"
                 className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#2f3c62] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9db3ff] transition hover:border-[#9db3ff] hover:text-white"
               >
-                Upload photo
+                {t("uploadPhoto")}
                 <input
                   id="avatar"
                   type="file"
@@ -365,7 +452,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
                     }}
                     className="inline-flex items-center gap-2 rounded-full border border-[#2f9b7a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5] transition hover:border-[#5ef1b5] hover:text-white"
                   >
-                    Adjust
+                    {t("adjust")}
                   </button>
                   <button
                     type="button"
@@ -379,7 +466,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
                     }}
                     className="inline-flex items-center gap-2 rounded-full border border-[#553432] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#ff8ba7] transition hover:border-[#ff8ba7] hover:text-white"
                   >
-                    Remove
+                    {t("remove")}
                   </button>
                 </>
               ) : null}
@@ -391,10 +478,10 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
       <div className="space-y-3">
         <div className="space-y-1">
           <span className="block text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]">
-            Photo ID (internal use)
+            {t("idPhoto")}
           </span>
           <p className="text-xs text-[var(--muted)]">
-            Only venue staff can view this. Upload a government-issued ID or passport so we can verify you quickly if needed.
+            {t("idPhotoDescription")}
           </p>
         </div>
         <label
@@ -419,9 +506,9 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
           )}
           <div className="space-y-1">
             <p className="text-sm font-semibold text-white">
-              {fileName ?? "Tap to upload your ID photo"}
+              {fileName ?? t("tapToUpload")}
             </p>
-            <p className="text-xs text-[var(--muted)]">JPEG or PNG · Max 5 MB</p>
+            <p className="text-xs text-[var(--muted)]">{t("idPhotoHelp")}</p>
           </div>
           <input
             id="id_photo"
@@ -435,7 +522,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
         </label>
         <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
           <span className="rounded-full border border-[#223253] px-3 py-1">
-            Tips: face visible · no glare · no filters
+            {t("idPhotoTips")}
           </span>
           {previewUrl ? (
             <button
@@ -451,7 +538,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
               }}
               className="rounded-full border border-[#2f9b7a] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5]"
             >
-              Adjust photo
+              {t("adjustPhoto")}
             </button>
           ) : null}
           {previewUrl ? (
@@ -465,7 +552,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
               }}
               className="rounded-full border border-[#553432] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#ff8ba7]"
             >
-              Remove
+              {t("remove")}
             </button>
           ) : null}
         </div>
@@ -474,10 +561,10 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
       <div className="space-y-3">
         <div className="space-y-1">
           <span className="block text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]">
-            Gallery photos (optional)
+            {t("galleryPhotos")}
           </span>
           <p className="text-xs text-[var(--muted)]">
-            Add up to four vibe shots. They’ll sit behind your card in the connect deck.
+            {t("galleryDescription")}
           </p>
         </div>
         <label
@@ -490,10 +577,10 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
           <div className="space-y-1">
             <p className="text-sm font-semibold text-white">
               {galleryPreviews.length
-                ? `Selected ${galleryPreviews.length} photo${galleryPreviews.length > 1 ? "s" : ""}`
-                : "Tap to add gallery photos"}
+                ? t("selectedPhotos", { count: galleryPreviews.length, plural: galleryPreviews.length > 1 ? "s" : "" })
+                : t("tapToAdd")}
             </p>
-            <p className="text-xs text-[var(--muted)]">JPEG or PNG · Max 5 MB each</p>
+            <p className="text-xs text-[var(--muted)]">{t("galleryHelp")}</p>
           </div>
           <input
             id="gallery_photos"
@@ -521,10 +608,10 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
 
       <div className="space-y-3 rounded-3xl border border-[#1d2946] bg-[#0b1224] p-4">
         <label className="text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]">
-          Highlights
+          {t("highlights")}
         </label>
         <p className="text-xs text-[var(--muted)]">
-          Add up to five quick tags so other guests know your vibe instantly.
+          {t("highlightsDescription")}
         </p>
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
@@ -548,7 +635,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
             value={tagInput}
             onChange={(event) => setTagInput(event.target.value)}
             onKeyDown={handleTagKeyDown}
-            placeholder={tags.length ? "Add another tag" : "#HouseHead"}
+            placeholder={tags.length ? t("addAnotherTag") : t("tagPlaceholder")}
             className="flex-1 min-w-[140px] rounded-full border border-dashed border-[#2e3a5d] bg-transparent px-4 py-2 text-sm text-white outline-none transition focus:border-[var(--accent)]"
           />
           <button
@@ -556,7 +643,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
             onClick={addTag}
             className="rounded-full border border-[#2f9b7a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5] transition hover:border-[#5ef1b5] hover:text-white"
           >
-            Add tag
+            {t("addTag")}
           </button>
         </div>
       </div>
@@ -566,17 +653,17 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
           htmlFor="favorite_track_url"
           className="text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]"
         >
-          Favorite track link (optional)
+          {t("favoriteTrack")}
         </label>
         <input
           id="favorite_track_url"
           name="favorite_track_url"
           type="url"
           defaultValue={defaultValues.favorite_track_url ?? ""}
-          placeholder="https://open.spotify.com/track/..."
+          placeholder={t("favoriteTrackPlaceholder")}
           className="w-full rounded-2xl border border-[#233050] bg-[var(--surface-raised)] px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
         />
-        <p className="text-xs text-[var(--muted)]">Drop a Spotify or Apple Music link if you have a go-to vibe.</p>
+        <p className="text-xs text-[var(--muted)]">{t("favoriteTrackHelp")}</p>
       </div>
 
       <div className="flex items-start gap-3 rounded-2xl border border-[#1d2946] bg-[#0b1224] p-4">
@@ -589,23 +676,17 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
         />
         <label htmlFor="is_private" className="space-y-1 text-sm text-white">
           <span className="flex items-center gap-2 font-medium">
-            Private Mode
-            <span className="rounded-full bg-[#1a2847] px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">
-              Hide from deck
-            </span>
+            {t("privateMode")}
           </span>
           <p className="text-xs text-[var(--muted)]">
-            When enabled, you won&apos;t appear in the connect deck. You can still browse others and
-            send vibes. Venue staff always have access for safety.
+            {t("privateDescription")}
           </p>
         </label>
       </div>
 
       <div className="rounded-2xl border border-[#1d2946] bg-[#0b1224] p-4 text-xs text-[var(--muted)]">
         <p>
-          We&apos;ll email magic links to
-          <span className="font-medium text-white"> {defaultValues.email ?? "your email"}</span>
-          so you can hop back into the venue quickly.
+          {t("magicLinkEmails", { email: defaultValues.email ?? "your email" })}
         </p>
       </div>
 
@@ -618,7 +699,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
         ) : null}
         {state.success ? (
           <p className="rounded-2xl border border-[#264b3f] bg-[#122521] px-4 py-2 text-xs text-[#5ef1b5]">
-            Profile saved. You&apos;re ready to connect once the venue doors open.
+            {t("success")}
           </p>
         ) : null}
       </div>
@@ -629,7 +710,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
           crop={crop}
           zoom={zoom}
           aspect={CROPPER_ASPECT}
-          title="Adjust your ID photo"
+          title={t("adjustPhoto")}
           helperText="Pinch or slide to zoom, then drag to center the document."
           onCropChange={setCrop}
           onZoomChange={setZoom}
@@ -645,7 +726,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
           crop={avatarCrop}
           zoom={avatarZoom}
           aspect={AVATAR_ASPECT}
-          title="Adjust your profile photo"
+          title={t("adjust")}
           helperText="Keep your face centered for the best look."
           onCropChange={setAvatarCrop}
           onZoomChange={setAvatarZoom}
@@ -680,13 +761,14 @@ function CropModal({
   aspect,
   title,
   helperText,
-  confirmLabel = "Use photo",
+  confirmLabel,
   onCropChange,
   onZoomChange,
   onCropComplete,
   onClose,
   onConfirm,
 }: CropModalProps) {
+  const t = useTranslations("auth.onboarding.crop");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur">
       <div className="relative w-full max-w-md rounded-3xl border border-[#223253] bg-[#0a1020] p-6 text-white shadow-[0_30px_60px_-20px_rgba(0,0,0,0.7)]">
@@ -706,6 +788,7 @@ function CropModal({
           />
         </div>
         <div className="mt-5">
+          <label className="text-xs text-[var(--muted)]">{t("zoom")}</label>
           <input
             type="range"
             min={1}
@@ -722,14 +805,14 @@ function CropModal({
             onClick={onClose}
             className="rounded-full border border-[#553432] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#ff8ba7]"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="rounded-full border border-[#2f9b7a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5]"
           >
-            {confirmLabel}
+            {confirmLabel ?? t("apply")}
           </button>
         </div>
       </div>

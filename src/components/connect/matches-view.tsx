@@ -2,20 +2,22 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import * as React from "react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { buildWhatsAppLink } from "@/lib/util/whatsapp";
 
 import {
   respondInteractionAction,
   type InteractionActionState,
-} from "@/app/(app)/app/actions";
+} from "@/app/[locale]/(app)/app/actions";
 import {
   unmatchAction,
   blockUserAction,
   type MatchActionState,
-} from "@/app/(app)/matches/actions";
+} from "@/app/[locale]/(app)/matches/actions";
 import type { Database } from "@/lib/supabase/types";
 
 type InteractionRow = Database["public"]["Tables"]["interactions"]["Row"];
@@ -49,10 +51,11 @@ const isProfileBlocked = (profile?: { blocked_until?: string | null } | null) =>
 };
 
 const BlockedBadge = ({ profile }: { profile: SlimProfile | null }) => {
+  const t = useTranslations("common.status");
   if (!profile || !isProfileBlocked(profile)) return null;
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-[#553432] bg-[#301321] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ff8ba7]">
-      Blocked
+      {t("blocked")}
     </span>
   );
 };
@@ -66,6 +69,9 @@ function MatchActionsMenu({
   partnerId: string;
   partnerName: string;
 }) {
+  const t = useTranslations("app.matches");
+  const tActions = useTranslations("app.matches.actions");
+  const tConfirmations = useTranslations("app.matches.confirmations");
   const [isOpen, setIsOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState<"unmatch" | "block" | null>(null);
   const [unmatchState, unmatchFormAction] = useActionState(unmatchAction, matchActionInitialState);
@@ -76,7 +82,7 @@ function MatchActionsMenu({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-white/5 hover:text-white"
-        aria-label="Match options"
+        aria-label={tActions("matchOptions")}
       >
         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 16 16">
           <circle cx="8" cy="3" r="1.5" />
@@ -100,7 +106,7 @@ function MatchActionsMenu({
               className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[var(--muted)] transition hover:bg-white/5 hover:text-white"
             >
               <span>🔓</span>
-              <span>Unmatch</span>
+              <span>{tActions("unmatch")}</span>
             </button>
             <button
               onClick={() => {
@@ -110,7 +116,7 @@ function MatchActionsMenu({
               className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[#ff8ba7] transition hover:bg-white/5 hover:text-[#ff6b6b]"
             >
               <span>🚫</span>
-              <span>Block User</span>
+              <span>{tActions("blockUser")}</span>
             </button>
           </div>
         </>
@@ -119,16 +125,16 @@ function MatchActionsMenu({
       {showConfirm === "unmatch" && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6 backdrop-blur">
           <div className="w-full max-w-sm space-y-4 rounded-3xl border border-[#273763] bg-[#0b1224] p-6">
-            <h3 className="text-lg font-semibold text-white">Unmatch {partnerName}?</h3>
+            <h3 className="text-lg font-semibold text-white">{tConfirmations("unmatchTitle", { name: partnerName })}</h3>
             <p className="text-sm text-[var(--muted)]">
-              You can match again if you both send vibes in the future.
+              {tConfirmations("unmatchDescription")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirm(null)}
                 className="flex-1 rounded-2xl border border-[#223253] px-4 py-2 text-sm font-semibold text-[var(--muted)] transition hover:border-white/30 hover:text-white"
               >
-                Cancel
+                {tConfirmations("cancel")}
               </button>
               <form action={unmatchFormAction} className="flex-1">
                 <input type="hidden" name="matchId" value={matchId} />
@@ -136,7 +142,7 @@ function MatchActionsMenu({
                   type="submit"
                   className="w-full rounded-2xl bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
                 >
-                  Unmatch
+                  {tActions("unmatch")}
                 </button>
               </form>
             </div>
@@ -150,16 +156,16 @@ function MatchActionsMenu({
       {showConfirm === "block" && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6 backdrop-blur">
           <div className="w-full max-w-sm space-y-4 rounded-3xl border border-[#273763] bg-[#0b1224] p-6">
-            <h3 className="text-lg font-semibold text-white">Block {partnerName}?</h3>
+            <h3 className="text-lg font-semibold text-white">{tConfirmations("blockTitle", { name: partnerName })}</h3>
             <p className="text-sm text-[var(--muted)]">
-              They won&apos;t be able to see you or send you vibes anymore. This will also unmatch you.
+              {tConfirmations("blockDescription")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirm(null)}
                 className="flex-1 rounded-2xl border border-[#223253] px-4 py-2 text-sm font-semibold text-[var(--muted)] transition hover:border-white/30 hover:text-white"
               >
-                Cancel
+                {tConfirmations("cancel")}
               </button>
               <form action={blockFormAction} className="flex-1">
                 <input type="hidden" name="blockedUserId" value={partnerId} />
@@ -167,7 +173,7 @@ function MatchActionsMenu({
                   type="submit"
                   className="w-full rounded-2xl bg-gradient-to-r from-[#ff6b6b] to-[#ee5a6f] px-4 py-2 text-sm font-semibold text-white transition hover:from-[#ff8080] hover:to-[#ff6b6b]"
                 >
-                  Block
+                  {tConfirmations("block")}
                 </button>
               </form>
             </div>
@@ -230,6 +236,21 @@ function RespondForm({
   children: React.ReactNode;
 }) {
   const [state, formAction] = useActionState(respondInteractionAction, respondInitialState);
+  const router = useRouter();
+
+  // When accepting a vibe successfully, refresh and navigate to connect page to show match celebration
+  useEffect(() => {
+    if (state.success && action === "accept") {
+      // Refresh first to get the new match data, then navigate
+      router.refresh();
+      // Small delay to ensure server has processed the match and data is refreshed
+      const timer = setTimeout(() => {
+        // Navigate to connect page to show match celebration modal
+        router.push("/app");
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [state.success, action, router]);
 
   return (
     <form action={formAction} className="space-y-2">
@@ -257,6 +278,14 @@ function RespondForm({
 type TabType = "incoming" | "matches" | "sent";
 
 export function MatchesView(props: MatchesViewProps) {
+  const t = useTranslations("app.matches");
+  const tHeader = useTranslations("app.matches.header");
+  const tTabs = useTranslations("app.matches.tabs");
+  const tIncoming = useTranslations("app.matches.incoming");
+  const tMatches = useTranslations("app.matches.matches");
+  const tSent = useTranslations("app.matches.sent");
+  const tActions = useTranslations("app.matches.actions");
+  const tWhatsApp = useTranslations("app.matches.whatsapp");
   const [activeTab, setActiveTab] = useState<TabType>("incoming");
   
   const matches = props.matches.map((match) => {
@@ -266,9 +295,9 @@ export function MatchesView(props: MatchesViewProps) {
   });
 
   const tabs: { id: TabType; label: string; count: number }[] = [
-    { id: "incoming", label: "Incoming Vibes", count: props.pendingIncoming.length },
-    { id: "matches", label: "Matches", count: matches.length },
-    { id: "sent", label: "Sent Vibes", count: props.pendingOutgoing.length },
+    { id: "incoming", label: tTabs("incoming"), count: props.pendingIncoming.length },
+    { id: "matches", label: tTabs("matches"), count: matches.length },
+    { id: "sent", label: tTabs("sent"), count: props.pendingOutgoing.length },
   ];
 
   return (
@@ -276,14 +305,14 @@ export function MatchesView(props: MatchesViewProps) {
       <div className="px-4 pb-32 pt-10">
         <header className="mb-6 space-y-3">
         <p className="text-xs uppercase tracking-[0.35em] text-[var(--muted)]">
-          Vibes & Matches
+          {tHeader("subtitle")}
         </p>
-        <h1 className="text-2xl font-semibold">Keep the energy flowing</h1>
+        <h1 className="text-2xl font-semibold">{tHeader("title")}</h1>
         <p className="text-sm text-[var(--muted)]">
-          Respond to vibes, check your matches, and jump straight into WhatsApp when it clicks.
+          {tHeader("description")}
         </p>
         <p className="text-xs text-[var(--muted)]">
-          Magic links go to <span className="text-white">{props.sessionEmail}</span>
+          {tHeader("magicLinksGoTo")} <span className="text-white">{props.sessionEmail}</span>
         </p>
       </header>
 
@@ -324,7 +353,7 @@ export function MatchesView(props: MatchesViewProps) {
               <div className="py-8 text-center">
                 <div className="mb-3 text-4xl">💫</div>
             <p className="text-sm text-[var(--muted)]">
-                  No incoming vibes yet. They&apos;ll show up here when someone sends you a vibe.
+                  {tIncoming("empty")}
             </p>
               </div>
           ) : (
@@ -342,17 +371,17 @@ export function MatchesView(props: MatchesViewProps) {
                       <div>
                         <p className="text-sm font-semibold">{guest.display_name}</p>
                         <div className="flex items-center gap-2">
-                          <p className="text-xs text-[var(--muted)]">Sent you a vibe</p>
+                          <p className="text-xs text-[var(--muted)]">{tIncoming("sentYouVibe")}</p>
                           <BlockedBadge profile={guest} />
                         </div>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <RespondForm interactionId={interaction.id} action="decline">
-                        Pass
+                        {tActions("pass")}
                       </RespondForm>
                       <RespondForm interactionId={interaction.id} action="accept">
-                        Accept
+                        {tActions("accept")}
                       </RespondForm>
                     </div>
                   </li>
@@ -370,7 +399,7 @@ export function MatchesView(props: MatchesViewProps) {
               <div className="py-8 text-center">
                 <div className="mb-3 text-4xl">✨</div>
             <p className="text-sm text-[var(--muted)]">
-                  Once someone accepts your vibe, your match and a WhatsApp link will pop up here.
+                  {tMatches("empty")}
             </p>
               </div>
           ) : (
@@ -388,7 +417,7 @@ export function MatchesView(props: MatchesViewProps) {
                   let whatsappHref: string;
                   let isExternal = true;
                   if (partner.phone_number) {
-                    const whatsappMessage = `Hey! We matched on Social tonight. Let's keep the vibe going ✨`;
+                    const whatsappMessage = tWhatsApp("messageTemplate");
                     whatsappHref = buildWhatsAppLink(whatsappMessage, partner.phone_number);
                   } else {
                     // Fallback to stored URL or show warning
@@ -408,7 +437,7 @@ export function MatchesView(props: MatchesViewProps) {
                               <p className="text-sm font-semibold text-white">{partner.display_name}</p>
                               <BlockedBadge profile={partner} />
                             </div>
-                            <p className="text-xs text-[var(--muted)]">Matched {matchTimestamp}</p>
+                            <p className="text-xs text-[var(--muted)]">{tMatches("matched", { time: matchTimestamp })}</p>
                           </div>
                       </div>
                         <MatchActionsMenu
@@ -426,7 +455,7 @@ export function MatchesView(props: MatchesViewProps) {
                         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                         </svg>
-                        Message on WhatsApp
+                        {tMatches("messageOnWhatsApp")}
                     </Link>
                   </li>
                 );
@@ -443,7 +472,7 @@ export function MatchesView(props: MatchesViewProps) {
               <div className="py-8 text-center">
                 <div className="mb-3 text-4xl">🌊</div>
             <p className="text-sm text-[var(--muted)]">
-                  Vibes you send will show up here with their status.
+                  {tSent("empty")}
             </p>
               </div>
           ) : (
@@ -461,7 +490,7 @@ export function MatchesView(props: MatchesViewProps) {
                         <p className="text-sm font-semibold text-white">{guest.display_name}</p>
                         <div className="flex items-center gap-2">
                           <p className="text-xs text-[var(--muted)]">
-                            Vibe {interaction.status === "accepted" ? "accepted ✨" : "sent"}
+                            {tSent("sentVibeTo")} {interaction.status === "accepted" ? tSent("accepted") : tSent("pending")}
                           </p>
                           <BlockedBadge profile={guest} />
                         </div>

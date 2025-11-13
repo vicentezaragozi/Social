@@ -4,11 +4,12 @@ import Image from "next/image";
 import Cropper, { type Area } from "react-easy-crop";
 import { useActionState, useEffect, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   updateProfileAction,
   type ProfileUpdateState,
-} from "@/app/(app)/profile/actions";
+} from "@/app/[locale]/(app)/profile/actions";
 import { getCroppedDataUrl, type PixelCrop } from "@/lib/image";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,9 @@ export function ProfileForm({
   };
   email: string;
 }) {
+  const t = useTranslations("app.profile.form");
+  const tAlerts = useTranslations("app.profile.alerts");
+  const tCrop = useTranslations("app.profile.crop");
   const [state, formAction] = useActionState(updateProfileAction, initialState);
   const [tags, setTags] = useState<string[]>(defaultValues.highlight_tags ?? []);
   const [tagInput, setTagInput] = useState("");
@@ -57,7 +61,7 @@ export function ProfileForm({
     if (!value) return;
     const normalized = value.startsWith("#") ? value : `#${value}`;
     if (tags.length >= 5) {
-      alert("You can add up to five highlight tags.");
+      alert(tAlerts("maxTags"));
       return;
     }
     if (tags.some((tag) => tag.toLowerCase() === normalized.toLowerCase())) {
@@ -93,7 +97,7 @@ export function ProfileForm({
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Please upload an image smaller than 5 MB.");
+      alert(tAlerts("fileTooLarge"));
       return;
     }
 
@@ -136,7 +140,7 @@ export function ProfileForm({
       return;
     }
     if (files.length + gallery.length > 4) {
-      alert("You can keep up to four gallery photos.");
+      alert(tAlerts("maxGallery"));
       event.target.value = "";
       setNewGalleryPreviews([]);
       return;
@@ -146,7 +150,7 @@ export function ProfileForm({
     const maxSize = 5 * 1024 * 1024; // 5MB
     const oversizedFiles = Array.from(files).filter(file => file.size > maxSize);
     if (oversizedFiles.length > 0) {
-      alert(`Please upload images smaller than 5 MB. ${oversizedFiles.length} file(s) are too large.`);
+      alert(tAlerts("filesTooLarge", { count: oversizedFiles.length }));
       event.target.value = "";
       setNewGalleryPreviews([]);
       return;
@@ -190,15 +194,15 @@ export function ProfileForm({
           </div>
           <div className="flex-1 space-y-2 text-xs text-[var(--muted)]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#8796c6]">
-              Profile photo
+              {t("profilePhoto")}
             </p>
-            <p>Guests see this at the top of your card. Choose a clear, welcoming shot.</p>
+            <p>{t("profilePhotoDescription")}</p>
             <div className="flex flex-wrap gap-2">
               <label
                 htmlFor="avatar_upload"
                 className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#2f3c62] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9db3ff] transition hover:border-[#9db3ff] hover:text-white"
               >
-                Upload photo
+                {t("uploadPhoto")}
                 <input
                   id="avatar_upload"
                   type="file"
@@ -222,7 +226,7 @@ export function ProfileForm({
                     }}
                     className="inline-flex items-center gap-2 rounded-full border border-[#2f9b7a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5] transition hover:border-[#5ef1b5] hover:text-white"
                   >
-                    Adjust
+                    {t("adjust")}
                   </button>
                   <button
                     type="button"
@@ -236,7 +240,7 @@ export function ProfileForm({
                     }}
                     className="inline-flex items-center gap-2 rounded-full border border-[#553432] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#ff8ba7] transition hover:border-[#ff8ba7] hover:text-white"
                   >
-                    Remove
+                    {t("remove")}
                   </button>
                 </>
               ) : null}
@@ -250,7 +254,7 @@ export function ProfileForm({
           htmlFor="display_name"
           className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--muted)]"
         >
-          Display name
+          {t("displayName")}
         </label>
         <input
           id="display_name"
@@ -266,7 +270,7 @@ export function ProfileForm({
           htmlFor="phone_number"
           className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--muted)]"
         >
-          Phone number
+          {t("phoneNumber")}
         </label>
         <input
           id="phone_number"
@@ -277,7 +281,7 @@ export function ProfileForm({
           className="w-full rounded-2xl border border-[#233050] bg-[var(--surface-raised)] px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/25"
         />
         <p className="text-xs text-[var(--muted)]">
-          Required to send vibes and unlock WhatsApp chat with matches. Format: +1234567890
+          {t("phoneHelp")}
         </p>
       </div>
 
@@ -286,7 +290,7 @@ export function ProfileForm({
           htmlFor="bio"
           className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--muted)]"
         >
-          Bio
+          {t("bio")}
         </label>
         <textarea
           id="bio"
@@ -294,19 +298,19 @@ export function ProfileForm({
           maxLength={240}
           rows={3}
           defaultValue={defaultValues.bio ?? ""}
-          placeholder="Let people know your vibe."
+          placeholder={t("bioPlaceholder")}
           className="w-full rounded-2xl border border-[#233050] bg-[var(--surface-raised)] px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/25"
         />
-        <p className="text-xs text-[var(--muted)]">Shared when your profile is public.</p>
+        <p className="text-xs text-[var(--muted)]">{t("bioHelp")}</p>
       </div>
 
       <div className="space-y-3">
         <div className="space-y-1">
           <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">
-            Gallery photos
+            {t("galleryPhotos")}
           </span>
           <p className="text-xs text-[var(--muted)]">
-            Keep up to four photos. Remove ones you no longer want and add new ones below.
+            {t("galleryDescription")}
           </p>
         </div>
         {gallery.length ? (
@@ -337,7 +341,7 @@ export function ProfileForm({
                   className="absolute inset-0 flex items-center justify-center bg-[#301321]/95 opacity-0 backdrop-blur transition group-hover:opacity-100"
                 >
                   <span className="rounded-full border border-[#553432] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#ff8ba7]">
-                    Remove
+                    {t("remove")}
                   </span>
                 </button>
               </div>
@@ -346,7 +350,7 @@ export function ProfileForm({
         ) : (
           <div className="rounded-2xl border border-dashed border-[#2e3a5d] bg-[#101b33] p-6 text-center text-sm text-[var(--muted)]">
             <div className="mb-2 text-3xl">📸</div>
-            No gallery photos yet. Add some below.
+            {t("noGalleryPhotos")}
           </div>
         )}
         <label
@@ -359,11 +363,11 @@ export function ProfileForm({
           <div className="space-y-1">
             <p className="text-sm font-semibold text-white">
               {newGalleryPreviews.length
-                ? `Queued ${newGalleryPreviews.length} new photo${newGalleryPreviews.length > 1 ? "s" : ""}`
-                : "Tap to add new photos"}
+                ? t("queuedPhotos", { count: newGalleryPreviews.length, plural: newGalleryPreviews.length > 1 ? "s" : "" })
+                : t("tapToAdd")}
             </p>
             <p className="text-xs text-[var(--muted)]">
-              JPEG or PNG · Max 5 MB each · Replaces nothing until you save
+              {t("galleryHelp")}
             </p>
           </div>
           <input
@@ -379,7 +383,7 @@ export function ProfileForm({
         {newGalleryPreviews.length ? (
           <div className="rounded-2xl border border-[#2c3c65] bg-[#111a33] p-3">
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#9db3ff]">
-              New Photos (Not saved yet)
+              {t("newPhotos")}
             </p>
             <div className="grid grid-cols-3 gap-2">
               {newGalleryPreviews.map((url, index) => (
@@ -407,10 +411,10 @@ export function ProfileForm({
 
       <div className="space-y-3 rounded-2xl border border-[#223253] bg-[#101b33] p-4">
         <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">
-          Highlights
+          {t("highlights")}
         </span>
         <p className="text-xs text-[var(--muted)]">
-          Tags appear on your connect card. Keep them short and punchy.
+          {t("highlightsDescription")}
         </p>
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
@@ -434,7 +438,7 @@ export function ProfileForm({
             value={tagInput}
             onChange={(event) => setTagInput(event.target.value)}
             onKeyDown={handleTagKeyDown}
-            placeholder={tags.length ? "Add another tag" : "#HouseHead"}
+            placeholder={tags.length ? t("addAnotherTag") : t("tagPlaceholder")}
             className="flex-1 min-w-[140px] rounded-full border border-dashed border-[#2e3a5d] bg-transparent px-4 py-2 text-sm text-white outline-none transition focus:border-[var(--accent)]"
           />
           <button
@@ -442,7 +446,7 @@ export function ProfileForm({
             onClick={addTag}
             className="rounded-full border border-[#2f9b7a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5] transition hover:border-[#5ef1b5] hover:text-white"
           >
-            Add tag
+            {t("addTag")}
           </button>
         </div>
       </div>
@@ -452,18 +456,18 @@ export function ProfileForm({
           htmlFor="favorite_track_url"
           className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--muted)]"
         >
-          Favorite track link
+          {t("favoriteTrackLink")}
         </label>
         <input
           id="favorite_track_url"
           name="favorite_track_url"
           type="url"
           defaultValue={defaultValues.favorite_track_url ?? ""}
-          placeholder="https://open.spotify.com/track/..."
+          placeholder={t("favoriteTrackPlaceholder")}
           className="w-full rounded-2xl border border-[#233050] bg-[var(--surface-raised)] px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/25"
         />
         <p className="text-xs text-[var(--muted)]">
-          Share a Spotify or Apple Music link to keep the conversation flowing.
+          {t("favoriteTrackHelp")}
         </p>
       </div>
 
@@ -477,22 +481,20 @@ export function ProfileForm({
         />
         <label htmlFor="is_private" className="space-y-1 text-sm">
           <span className="flex items-center gap-2 font-semibold text-white">
-            Private Mode
+            {t("privateMode")}
             <span className="rounded-full bg-[#1a2847] px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">
-              Hide from deck
+              {t("hideFromDeck")}
             </span>
           </span>
           <p className="text-xs text-[var(--muted)]">
-            When enabled, you won&apos;t appear in the connect deck. You can still browse others and
-            send vibes. Venue staff always have access for safety.
+            {t("privateDescription")}
           </p>
         </label>
       </div>
 
       <div className="rounded-2xl border border-[#223253] bg-[#101b33] p-4 text-xs text-[var(--muted)]">
         <p>
-          Magic link emails go to <span className="text-white">{email}</span>. Ask the staff if you
-          need to update it.
+          {t("magicLinkEmails", { email })}
         </p>
       </div>
 
@@ -502,7 +504,7 @@ export function ProfileForm({
           "group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]",
         )}
       >
-        <span className="relative z-10">Save profile</span>
+        <span className="relative z-10">{t("save")}</span>
         <div className="absolute inset-0 translate-y-full bg-[var(--accent-strong)] transition group-hover:translate-y-0" />
       </button>
 
@@ -513,7 +515,7 @@ export function ProfileForm({
       ) : null}
       {state.success ? (
         <p className="rounded-2xl border border-[#264b3f] bg-[#122521] px-4 py-2 text-xs text-[#5ef1b5]">
-          Profile updated. Your changes are live.
+          {t("success")}
         </p>
       ) : null}
     </form>
@@ -524,7 +526,7 @@ export function ProfileForm({
           crop={avatarCrop}
           zoom={avatarZoom}
           aspect={AVATAR_ASPECT}
-          title="Adjust your profile photo"
+          title={t("adjust")}
           helperText="Pinch or slide to zoom, center your face, and save."
           onCropChange={setAvatarCrop}
           onZoomChange={setAvatarZoom}
@@ -566,6 +568,7 @@ function ImageCropModal({
   onClose,
   onConfirm,
 }: ImageCropModalProps) {
+  const tCrop = useTranslations("app.profile.crop");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur">
       <div className="relative w-full max-w-md rounded-3xl border border-[#223253] bg-[#0a1020] p-6 text-white shadow-[0_30px_60px_-20px_rgba(0,0,0,0.7)]">
@@ -601,14 +604,14 @@ function ImageCropModal({
             onClick={onClose}
             className="rounded-full border border-[#553432] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#ff8ba7]"
           >
-            Cancel
+            {tCrop("cancel")}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="rounded-full border border-[#2f9b7a] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#5ef1b5]"
           >
-            {confirmLabel}
+            {confirmLabel ?? tCrop("apply")}
           </button>
         </div>
       </div>

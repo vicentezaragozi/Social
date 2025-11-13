@@ -2,7 +2,15 @@
 
 This repository contains the Social nightlife MVP: a unified, mobile-first Progressive Web App for guests and an admin dashboard for venue staff. The stack is **Next.js 16 (App Router)** with Tailwind CSS 4 design tokens and **Supabase** for authentication, data, and realtime features.
 
-All UI is built in English for now and follows a dark, neon-inspired aesthetic with no gradients, optimised for on-device installs via PWA.
+The application now supports English and Spanish throughout the guest and admin experiences. Toggle the language from any header via the ENG/ES control.
+
+### Internationalisation
+
+- Localised routes live under `src/app/[locale]/…`; every page/layout must be defined within that segment so translations resolve correctly.
+- Message catalogues reside in `src/i18n/messages/{locale}.json`. Keep keys stable, add new copy to both languages, and avoid reusing keys for different phrases.
+- Client components access copy via `useTranslations("<namespace>")`. Server components should use `getServerTranslations({locale, namespace})`.
+- For navigation, import `Link`, `useRouter`, and `usePathname` from `@/i18n` to ensure locale-aware URLs.
+- Middleware (`middleware.ts`) enforces locale prefixes and persists preferences via cookies. Routes that should stay unprefixed can be handled with rewrites in `next.config.ts`.
 
 ## Getting Started
 

@@ -174,9 +174,15 @@ If you see: `WARNING: Unable to find source file for page /manifest.webmanifest/
 
 If you see: `Error: ENOENT: no such file or directory, open '.next/server/middleware.js.nft.json'`
 
-- This can occur during the build process but usually resolves on subsequent builds
-- Ensure Root Directory is set to `.` (project root)
-- Try redeploying - this is often a transient build issue
+- **This error often appears but may not prevent deployment** - check if your deployment actually succeeded
+- This is a known issue with Next.js 16 and Vercel's function tracing system
+- The error occurs after "Created all serverless functions" - your app may still deploy successfully
+- **Solutions to try:**
+  1. Ensure Root Directory is set to `.` (project root, not `src`)
+  2. Clear Vercel build cache (Settings → General → Clear Build Cache)
+  3. Redeploy - this is often a transient build issue that resolves on retry
+  4. Verify `middleware.ts` is in the project root (not in `src/`)
+  5. If deployment fails, check the deployment URL - it might still work despite the error
 
 ### Environment Variables Not Working
 

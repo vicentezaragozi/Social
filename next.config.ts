@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  // Ensure middleware is properly traced for Vercel
+  outputFileTracingIncludes: {
+    '/**': ['./middleware.ts'],
+  },
   async rewrites() {
     return [
       {

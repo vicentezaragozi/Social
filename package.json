@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node -e \"const fs=require('fs');const path=require('path');const serverDir='.next/server';if(!fs.existsSync(serverDir))fs.mkdirSync(serverDir,{recursive:true});const nftPath=path.join(serverDir,'middleware.js.nft.json');if(!fs.existsSync(nftPath))fs.writeFileSync(nftPath,JSON.stringify({version:1,files:[],versionedFiles:[]},null,2));const mwPath=path.join(serverDir,'middleware.js');if(!fs.existsSync(mwPath)&&fs.existsSync('.next/middleware.js')){const mwContent=fs.readFileSync('.next/middleware.js');fs.writeFileSync(mwPath,mwContent);console.log('Created middleware.js in server directory')}\"",
+    "build": "next build && node -e \"const fs=require('fs');const path=require('path');const serverDir='.next/server';const ensureDir=(dir)=>{if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true})};ensureDir(serverDir);const nftPath=path.join(serverDir,'middleware.js.nft.json');const nftContent={version:1,files:[],versionedFiles:[]};if(!fs.existsSync(nftPath)||JSON.parse(fs.readFileSync(nftPath,'utf8')).files.length===0){fs.writeFileSync(nftPath,JSON.stringify(nftContent,null,2));console.log('✅ Created/updated middleware.js.nft.json')}const mwPath=path.join(serverDir,'middleware.js');if(!fs.existsSync(mwPath)){const middlewareWrapper='module.exports=require(\\'../middleware\\');module.exports.config=require(\\'../middleware\\').config;';fs.writeFileSync(mwPath,middlewareWrapper);console.log('✅ Created middleware.js wrapper')}else{console.log('✅ middleware.js already exists')}\"",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run"

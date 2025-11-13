@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "postbuild": "node scripts/fix-middleware-nft.js || true",
+    "build": "next build && node -e \"const fs=require('fs');const p='.next/server/middleware.js.nft.json';const d=require('path').dirname(p);if(!fs.existsSync(d))fs.mkdirSync(d,{recursive:true});if(!fs.existsSync(p))fs.writeFileSync(p,JSON.stringify({version:1,files:[],versionedFiles:[]},null,2))\"",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run"

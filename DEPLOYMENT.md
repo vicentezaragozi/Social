@@ -174,13 +174,14 @@ If you see: `WARNING: Unable to find source file for page /manifest.webmanifest/
 
 If you see: `Error: ENOENT: no such file or directory, open '.next/server/middleware.js.nft.json'`
 
-- **✅ FIXED**: A workaround script is included that automatically creates this file after the build
-- The `postbuild` script in `package.json` runs `scripts/fix-middleware-nft.js` which creates the missing file
+- **✅ FIXED**: The build command now automatically creates this file after the Next.js build completes
+- The fix is built into the `build` script in `package.json` - no separate file needed
 - This is a known issue with Next.js 16 and Vercel's function tracing system
+- The inline script creates the missing file immediately after `next build` completes
 - **If you still see this error:**
   1. Ensure Root Directory is set to `.` (project root, not `src`)
   2. Clear Vercel build cache (Settings → General → Clear Build Cache)
-  3. Verify the `postbuild` script is in your `package.json`
+  3. Verify the `build` script in `package.json` includes the inline fix
   4. Redeploy - the workaround should resolve it
 
 ### Environment Variables Not Working

@@ -1,10 +1,5 @@
 {
   "framework": "nextjs",
-  "regions": ["iad1"],
-  "functions": {
-    ".next/server/**/*.js": {
-      "includeFiles": ".next/server/middleware.js.nft.json"
-    }
-  }
+  "regions": ["iad1"]
 }
 

@@ -88,11 +88,13 @@ In your Vercel project dashboard:
 In Vercel dashboard, go to **Settings** → **General**:
 
 - **Framework Preset**: Next.js (auto-detected)
-- **Root Directory**: `./` (leave as default)
+- **Root Directory**: `.` (the project root - **NOT** `src`)
 - **Build Command**: `npm run build` (default)
 - **Output Directory**: `.next` (default)
 - **Install Command**: `npm install` (default)
 - **Node.js Version**: 18.x or 20.x (recommended)
+
+**Important**: When asked for "Root Directory" or "Source Directory", select `.` (dot) or leave it empty. **Do NOT** select `src` - your Next.js project root is where `package.json`, `next.config.ts`, and `vercel.json` are located.
 
 ## Step 5: Deploy Database Migrations
 
@@ -158,6 +160,23 @@ After deployment completes:
 - Ensure all environment variables are set
 - Verify `package.json` scripts are correct
 - Check Node.js version compatibility
+- **Verify Root Directory is set to `.` (not `src`)**
+
+### Manifest.webmanifest Warning
+
+If you see: `WARNING: Unable to find source file for page /manifest.webmanifest/route`
+
+- This is a **harmless warning** - Next.js automatically generates the manifest route from `src/app/manifest.ts`
+- The app will work correctly despite this warning
+- You can safely ignore it
+
+### Middleware.js.nft.json Error
+
+If you see: `Error: ENOENT: no such file or directory, open '.next/server/middleware.js.nft.json'`
+
+- This can occur during the build process but usually resolves on subsequent builds
+- Ensure Root Directory is set to `.` (project root)
+- Try redeploying - this is often a transient build issue
 
 ### Environment Variables Not Working
 

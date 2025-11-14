@@ -47,7 +47,7 @@ const manifest = (): MetadataRoute.Manifest => ({
   prefer_related_applications: false,
   display_override: ["standalone", "fullscreen"],
   launch_handler: {
-    client_mode: "navigate-existing",
+    client_mode: "navigate-new",
   },
   categories: ["social", "lifestyle", "entertainment"],
 });

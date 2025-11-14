@@ -1,7 +1,7 @@
-const CACHE_NAME = "social-pwa-v1";
-const ASSET_CACHE = "social-assets-v1";
+const CACHE_NAME = "social-pwa-v2";
+const ASSET_CACHE = "social-assets-v2";
 
-const OFFLINE_URLS = ["/", "/app", "/sign-in"];
+const OFFLINE_URLS = ["/", "/app"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -29,7 +29,16 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+  
+  // Only handle GET requests
   if (request.method !== "GET") {
+    return;
+  }
+
+  // Never cache auth callback routes - they must always go to network
+  const url = new URL(request.url);
+  if (url.pathname.includes("/auth/callback") || url.pathname.includes("/sign-in")) {
+    event.respondWith(fetch(request));
     return;
   }
 
@@ -47,12 +56,29 @@ self.addEventListener("fetch", (event) => {
 });
 
 async function networkFirst(request) {
+  const url = new URL(request.url);
+  
+  // Never cache auth routes
+  if (url.pathname.includes("/auth/callback") || url.pathname.includes("/sign-in")) {
+    return fetch(request);
+  }
+
   const cache = await caches.open(CACHE_NAME);
   try {
     const response = await fetch(request);
-    cache.put(request, response.clone());
+    
+    // Only cache successful responses that aren't auth routes
+    if (response.ok && !url.pathname.includes("/auth/callback") && !url.pathname.includes("/sign-in")) {
+      cache.put(request, response.clone());
+    }
+    
     return response;
   } catch (error) {
+    // Don't serve cached auth routes
+    if (url.pathname.includes("/auth/callback") || url.pathname.includes("/sign-in")) {
+      throw error;
+    }
+    
     const cachedResponse = await cache.match(request);
     if (cachedResponse) {
       return cachedResponse;

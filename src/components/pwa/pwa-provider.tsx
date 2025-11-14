@@ -61,6 +61,49 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
         .catch((error) => console.error("Service worker registration failed", error));
     }
 
+    // Handle magic link callback URLs when PWA opens
+    // Check if we're in standalone PWA mode (installed app)
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone ||
+      document.referrer.includes("android-app://");
+
+    if (isStandalone) {
+      const currentUrl = new URL(window.location.href);
+      const currentPath = currentUrl.pathname;
+      
+      // If we're on the landing page but have auth callback params, redirect
+      const hasCode = currentUrl.searchParams.has("code");
+      const hasToken = currentUrl.searchParams.has("token");
+      
+      // Check if we should be on a callback route but aren't
+      if ((hasCode || hasToken) && !currentPath.includes("/auth/callback")) {
+        // Extract locale from current path or use default
+        const localeMatch = currentPath.match(/^\/([a-z]{2}(-[A-Z]{2})?)/);
+        const locale = localeMatch ? localeMatch[1] : "en";
+        
+        // Preserve all query params
+        const callbackUrl = `/${locale}/auth/callback${currentUrl.search}`;
+        console.log("PWA: Redirecting to callback URL:", callbackUrl);
+        window.location.href = callbackUrl;
+        return;
+      }
+      
+      // If we're on root and there's no auth params, check referrer/history
+      // Sometimes the callback URL gets lost when PWA opens
+      const rootPaths = ["/", "/en", "/es"];
+      if (rootPaths.includes(currentPath) || (currentPath.split("/").length === 2 && currentPath.startsWith("/"))) {
+        // Check sessionStorage for pending callback
+        const pendingCallback = sessionStorage.getItem("social:pending-callback");
+        if (pendingCallback) {
+          sessionStorage.removeItem("social:pending-callback");
+          console.log("PWA: Found pending callback, redirecting:", pendingCallback);
+          window.location.href = pendingCallback;
+          return;
+        }
+      }
+    }
+
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
       window.removeEventListener("appinstalled", onAppInstalled);

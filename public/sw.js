@@ -1,5 +1,5 @@
-const CACHE_NAME = "social-pwa-v3";
-const ASSET_CACHE = "social-assets-v3";
+const CACHE_NAME = "social-pwa-v4";
+const ASSET_CACHE = "social-assets-v4";
 
 const OFFLINE_URLS = ["/", "/app"];
 
@@ -52,11 +52,31 @@ self.addEventListener("fetch", (event) => {
   // NEVER cache auth routes - they must always go directly to network
   // This includes locale-based routes like /en/auth/callback
   if (isAuthRoute(url)) {
-    event.respondWith(fetch(request.clone()).catch(() => {
-      // If network fails, don't serve cache - just fail
-      return new Response("Network error", { status: 503 });
-    }));
+    // Don't cache, always fetch fresh
+    event.respondWith(
+      fetch(request.clone(), { 
+        cache: "no-store",
+        credentials: "include"
+      }).catch(() => {
+        // If network fails, don't serve cache - just fail
+        return new Response("Network error", { status: 503 });
+      })
+    );
     return;
+  }
+  
+  // If root path has auth params, don't cache
+  if (url.pathname === "/" || url.pathname.match(/^\/[a-z]{2}\/?$/)) {
+    if (url.searchParams.has("code") || url.searchParams.has("token")) {
+      // Root with auth params - fetch fresh and don't cache
+      event.respondWith(
+        fetch(request.clone(), { 
+          cache: "no-store",
+          credentials: "include"
+        })
+      );
+      return;
+    }
   }
 
   if (

@@ -439,6 +439,9 @@
     }
   },
   "auth": {
+    "redirect": {
+      "message": "Redirigiendo..."
+    },
     "signIn": {
       "title": "Iniciar sesi\u00f3n",
       "header": {
@@ -551,7 +554,9 @@
       "crop": {
         "zoom": "Zoom",
         "cancel": "Cancelar",
-        "apply": "Aplicar Recorte"
+        "apply": "Aplicar Recorte",
+        "idHelper": "Pellizca o desliza para hacer zoom, luego arrastra para centrar el documento.",
+        "avatarHelper": "Mantén tu rostro centrado para la mejor apariencia."
       },
       "alerts": {
         "fileTooLarge": "Por favor sube una imagen m\u00e1s peque\u00f1a que 5 MB.",

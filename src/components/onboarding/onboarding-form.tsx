@@ -223,7 +223,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Please upload an image smaller than 5 MB.");
+      alert(tAlerts("fileTooLarge"));
       return;
     }
 
@@ -711,7 +711,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
           zoom={zoom}
           aspect={CROPPER_ASPECT}
           title={t("adjustPhoto")}
-          helperText="Pinch or slide to zoom, then drag to center the document."
+          helperText={tCrop("idHelper")}
           onCropChange={setCrop}
           onZoomChange={setZoom}
           onCropComplete={handleCropComplete}
@@ -727,7 +727,7 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
           zoom={avatarZoom}
           aspect={AVATAR_ASPECT}
           title={t("adjust")}
-          helperText="Keep your face centered for the best look."
+          helperText={tCrop("avatarHelper")}
           onCropChange={setAvatarCrop}
           onZoomChange={setAvatarZoom}
           onCropComplete={handleAvatarCropComplete}

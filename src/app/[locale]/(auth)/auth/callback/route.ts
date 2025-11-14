@@ -58,7 +58,9 @@ export async function GET(
       next = `/${locale}/onboarding`;
     }
 
-    return NextResponse.redirect(new URL(next, env.NEXT_PUBLIC_APP_URL));
+    // Redirect to loading page first, which will then redirect to final destination
+    const loadingUrl = new URL(`/${locale}/auth/callback/loading?redirect_to=${encodeURIComponent(next)}`, env.NEXT_PUBLIC_APP_URL);
+    return NextResponse.redirect(loadingUrl);
   }
 
   // No code provided, redirect to sign-in

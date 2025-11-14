@@ -439,6 +439,9 @@
     }
   },
   "auth": {
+    "redirect": {
+      "message": "Redirecting you..."
+    },
     "signIn": {
       "title": "Sign In",
       "header": {
@@ -551,7 +554,9 @@
       "crop": {
         "zoom": "Zoom",
         "cancel": "Cancel",
-        "apply": "Apply Crop"
+        "apply": "Apply Crop",
+        "idHelper": "Pinch or slide to zoom, then drag to center the document.",
+        "avatarHelper": "Keep your face centered for the best look."
       },
       "alerts": {
         "fileTooLarge": "Please upload an image smaller than 5 MB.",

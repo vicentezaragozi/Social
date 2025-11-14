@@ -71,7 +71,7 @@ In your Vercel project dashboard:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | `eyJhbGc...` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (keep secret!) | `eyJhbGc...` |
 | `SUPABASE_DB_PASSWORD` | Database password (if needed for migrations) | `your-password` |
-| `NEXT_PUBLIC_APP_URL` | Your production app URL | `https://your-app.vercel.app` |
+| `NEXT_PUBLIC_APP_URL` | **Your production app URL** ⚠️ **CRITICAL**: Must be your production URL, not localhost! | `https://your-app.vercel.app` |
 | `NEXT_PUBLIC_DJ_WHATSAPP_NUMBER` | WhatsApp number for song requests (optional) | `+1234567890` |
 
 ### How to Get Supabase Credentials
@@ -141,16 +141,32 @@ supabase db push
 vercel --prod
 ```
 
-## Step 9: Verify Deployment
+## Step 9: Configure Supabase Redirect URLs
+
+**⚠️ CRITICAL**: You must configure Supabase to allow your production redirect URLs:
+
+1. Go to your Supabase Dashboard
+2. Navigate to **Authentication** → **URL Configuration**
+3. Add your production URLs to **Redirect URLs**:
+   - `https://your-app.vercel.app/en/auth/callback`
+   - `https://your-app.vercel.app/es/auth/callback`
+   - Or use wildcard: `https://your-app.vercel.app/*/auth/callback`
+4. Add to **Site URL**: `https://your-app.vercel.app`
+5. Save changes
+
+**Without this, magic links will fail in production!**
+
+## Step 10: Verify Deployment
 
 After deployment completes:
 
 1. ✅ Check your live site loads correctly
-2. ✅ Test authentication flow
+2. ✅ **Test authentication flow** - Request magic link and verify it goes to production URL, not localhost
 3. ✅ Verify locale routing (`/en` and `/es`)
 4. ✅ Test PWA installation
 5. ✅ Check admin dashboard access
 6. ✅ Verify Supabase connections
+7. ✅ **Test magic link email** - Click the link and verify it redirects to production
 
 ## Troubleshooting
 
@@ -203,6 +219,28 @@ If you see errors like:
 - Ensure variables are set for the correct environment (Production/Preview/Development)
 - Redeploy after adding new variables
 - Check variable names match exactly (case-sensitive)
+
+### Magic Links Redirect to Localhost
+
+If magic links redirect to `http://localhost:3000` instead of your production URL:
+
+1. **Check `NEXT_PUBLIC_APP_URL` in Vercel**:
+   - Go to Vercel Dashboard → Settings → Environment Variables
+   - Verify `NEXT_PUBLIC_APP_URL` is set to your production URL (e.g., `https://your-app.vercel.app`)
+   - **NOT** `http://localhost:3000`
+   - Ensure it's set for **Production** environment
+   - Redeploy after updating
+
+2. **Configure Supabase Redirect URLs**:
+   - Go to Supabase Dashboard → Authentication → URL Configuration
+   - Add your production callback URLs:
+     - `https://your-app.vercel.app/en/auth/callback`
+     - `https://your-app.vercel.app/es/auth/callback`
+   - Save changes
+
+3. **Verify Environment Variable**:
+   - The code uses `env.NEXT_PUBLIC_APP_URL` to construct callback URLs
+   - This must match your production domain exactly
 
 ### Supabase Connection Issues
 

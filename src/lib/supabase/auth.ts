@@ -77,7 +77,9 @@ export async function signInWithEmail(
   }
 
   // Include locale in callback URL
-  const callbackUrl = new URL(`/${locale}${CALLBACK_PATH}`, env.NEXT_PUBLIC_APP_URL).toString();
+  // Use NEXT_PUBLIC_APP_URL from environment (must be set to production URL)
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
+  const callbackUrl = new URL(`/${locale}${CALLBACK_PATH}`, baseUrl).toString();
 
   const { error } = await supabase.auth.signInWithOtp({
     email,

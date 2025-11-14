@@ -30,6 +30,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [hasInstalled, setHasInstalled] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -86,6 +87,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
         // Preserve all query params
         const callbackUrl = `/${locale}/auth/callback${currentUrl.search}`;
         console.log("PWA: Redirecting to callback URL:", callbackUrl);
+        setIsCheckingAuth(true);
         window.location.href = callbackUrl;
         return;
       }
@@ -101,15 +103,18 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
         if (pendingCallback) {
           sessionStorage.removeItem("social:pending-callback");
           console.log("PWA: Found pending callback, redirecting:", pendingCallback);
+          setIsCheckingAuth(true);
           window.location.href = pendingCallback;
           return;
         }
         
         // Check if user is authenticated using Supabase client
+        setIsCheckingAuth(true);
         const supabase = getSupabaseBrowserClient();
         supabase.auth.getUser().then(({ data: { user }, error }) => {
           if (error) {
             console.error("PWA: Error checking auth state:", error);
+            setIsCheckingAuth(false);
             return;
           }
           
@@ -120,7 +125,10 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
             const locale = localeMatch ? localeMatch[1] : "en";
             
             console.log("PWA: User authenticated, redirecting to /app");
+            // Keep loading state - redirect will happen
             window.location.href = `/${locale}/app`;
+          } else {
+            setIsCheckingAuth(false);
           }
         });
       }
@@ -154,7 +162,30 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     <PWAContext.Provider value={value}>
       {children}
       <InstallBanner />
+      {isCheckingAuth && <AuthLoadingIndicator />}
     </PWAContext.Provider>
+  );
+}
+
+function AuthLoadingIndicator() {
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#040918]/95 backdrop-blur-sm">
+      <div className="flex flex-col items-center gap-4">
+        {/* Spinner */}
+        <div className="relative h-12 w-12">
+          <div className="absolute inset-0 rounded-full border-4 border-white/10" />
+          <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-[#5ef1b5]" />
+        </div>
+        {/* Loading bar */}
+        <div className="h-1 w-48 overflow-hidden rounded-full bg-white/10">
+          <div 
+            className="h-full w-1/2 bg-gradient-to-r from-transparent via-[#5ef1b5] to-transparent"
+            style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }}
+          />
+        </div>
+        <p className="text-sm font-medium text-white/80">Redirecting...</p>
+      </div>
+    </div>
   );
 }
 

@@ -53,6 +53,34 @@ export async function submitSongRequest(
   const displayName = profile?.display_name ?? "Social Guest";
   const { song, artist, note, venueId } = parseResult.data;
 
+  // Get admin users for this venue and find one with a phone number
+  const { data: venueMembers } = await supabase
+    .from("venue_memberships")
+    .select("user_id")
+    .eq("venue_id", venueId)
+    .eq("role", "admin")
+    .limit(10);
+
+  let adminPhoneNumber: string | undefined;
+
+  if (venueMembers && venueMembers.length > 0) {
+    // Get profiles for admin users with phone numbers
+    const adminUserIds = venueMembers.map((m) => m.user_id);
+    const { data: adminProfiles } = await supabase
+      .from("profiles")
+      .select("phone_number")
+      .in("id", adminUserIds)
+      .not("phone_number", "is", null)
+      .limit(1);
+
+    if (adminProfiles && adminProfiles.length > 0) {
+      adminPhoneNumber = adminProfiles[0].phone_number ?? undefined;
+    }
+  }
+
+  // Fallback to env variable if no admin phone number found
+  const targetPhoneNumber = adminPhoneNumber || publicEnv.djWhatsappNumber;
+
   const messageLines = [
     `Hey DJ! ${displayName} here 👋`,
     `Song request: ${song}`,
@@ -68,7 +96,7 @@ export async function submitSongRequest(
 
   const whatsappUrl = buildWhatsAppLink(
     messageLines.join("\n"),
-    publicEnv.djWhatsappNumber,
+    targetPhoneNumber,
   );
 
   const { error } = await supabase.from("song_requests").insert({

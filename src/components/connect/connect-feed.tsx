@@ -617,7 +617,6 @@ export function ConnectFeed(props: ConnectFeedProps) {
           <SkeletonDeck />
       )}
 
-        <MatchesPreview matches={matchesWithPartner} />
       </div>
       <ToastStack toasts={toasts} onDismiss={removeToast} />
       {showFirstVisitTooltip && !coachmarkOpen && cards.length ? (

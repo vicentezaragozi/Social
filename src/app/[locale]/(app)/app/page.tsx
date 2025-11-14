@@ -114,7 +114,7 @@ export default async function ConnectPage({
     supabase
       .from("matches")
       .select(
-        "id, interaction_id, profile_a, profile_b, whatsapp_url, created_at, profiles:profiles!matches_profile_a_fkey(id, display_name, avatar_url, bio, is_private), profiles_b:profiles!matches_profile_b_fkey(id, display_name, avatar_url, bio, is_private)",
+        "id, interaction_id, profile_a, profile_b, whatsapp_url, created_at, profiles:profiles!matches_profile_a_fkey(id, display_name, avatar_url, bio, is_private, phone_number), profiles_b:profiles!matches_profile_b_fkey(id, display_name, avatar_url, bio, is_private, phone_number)",
       )
       .or(`profile_a.eq.${profileId},profile_b.eq.${profileId}`)
       .order("created_at", { ascending: false }),

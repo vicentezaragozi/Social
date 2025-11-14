@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -61,7 +62,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
         .catch((error) => console.error("Service worker registration failed", error));
     }
 
-    // Handle magic link callback URLs when PWA opens
+    // Handle magic link callback URLs and authentication state when PWA opens
     // Check if we're in standalone PWA mode (installed app)
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
@@ -89,11 +90,13 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // If we're on root and there's no auth params, check referrer/history
-      // Sometimes the callback URL gets lost when PWA opens
+      // Check authentication state if on landing page
       const rootPaths = ["/", "/en", "/es"];
-      if (rootPaths.includes(currentPath) || (currentPath.split("/").length === 2 && currentPath.startsWith("/"))) {
-        // Check sessionStorage for pending callback
+      const isOnLandingPage = rootPaths.includes(currentPath) || 
+        (currentPath.split("/").length === 2 && currentPath.startsWith("/"));
+      
+      if (isOnLandingPage && !hasCode && !hasToken) {
+        // Check sessionStorage for pending callback first
         const pendingCallback = sessionStorage.getItem("social:pending-callback");
         if (pendingCallback) {
           sessionStorage.removeItem("social:pending-callback");
@@ -101,6 +104,25 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
           window.location.href = pendingCallback;
           return;
         }
+        
+        // Check if user is authenticated using Supabase client
+        const supabase = getSupabaseBrowserClient();
+        supabase.auth.getUser().then(({ data: { user }, error }) => {
+          if (error) {
+            console.error("PWA: Error checking auth state:", error);
+            return;
+          }
+          
+          if (user) {
+            // User is authenticated - redirect to app
+            // The app will handle session/onboarding logic
+            const localeMatch = currentPath.match(/^\/([a-z]{2}(-[A-Z]{2})?)/);
+            const locale = localeMatch ? localeMatch[1] : "en";
+            
+            console.log("PWA: User authenticated, redirecting to /app");
+            window.location.href = `/${locale}/app`;
+          }
+        });
       }
     }
 

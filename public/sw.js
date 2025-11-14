@@ -1,7 +1,19 @@
-const CACHE_NAME = "social-pwa-v2";
-const ASSET_CACHE = "social-assets-v2";
+const CACHE_NAME = "social-pwa-v3";
+const ASSET_CACHE = "social-assets-v3";
 
 const OFFLINE_URLS = ["/", "/app"];
+
+// Check if URL is an auth route (handles both /auth/callback and /[locale]/auth/callback)
+function isAuthRoute(url) {
+  const pathname = url.pathname.toLowerCase();
+  return (
+    pathname.includes("/auth/callback") ||
+    pathname.includes("/sign-in") ||
+    pathname.includes("/sign-out") ||
+    url.searchParams.has("code") || // Magic link code parameter
+    url.searchParams.has("token") // Auth token parameter
+  );
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -35,10 +47,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Never cache auth callback routes - they must always go to network
   const url = new URL(request.url);
-  if (url.pathname.includes("/auth/callback") || url.pathname.includes("/sign-in")) {
-    event.respondWith(fetch(request));
+  
+  // NEVER cache auth routes - they must always go directly to network
+  // This includes locale-based routes like /en/auth/callback
+  if (isAuthRoute(url)) {
+    event.respondWith(fetch(request.clone()).catch(() => {
+      // If network fails, don't serve cache - just fail
+      return new Response("Network error", { status: 503 });
+    }));
     return;
   }
 
@@ -58,9 +75,12 @@ self.addEventListener("fetch", (event) => {
 async function networkFirst(request) {
   const url = new URL(request.url);
   
-  // Never cache auth routes
-  if (url.pathname.includes("/auth/callback") || url.pathname.includes("/sign-in")) {
-    return fetch(request);
+  // Never cache auth routes - always go to network
+  if (isAuthRoute(url)) {
+    return fetch(request).catch(() => {
+      // Don't fall back to cache for auth routes
+      return new Response("Network error", { status: 503 });
+    });
   }
 
   const cache = await caches.open(CACHE_NAME);
@@ -68,23 +88,27 @@ async function networkFirst(request) {
     const response = await fetch(request);
     
     // Only cache successful responses that aren't auth routes
-    if (response.ok && !url.pathname.includes("/auth/callback") && !url.pathname.includes("/sign-in")) {
+    if (response.ok && !isAuthRoute(url)) {
       cache.put(request, response.clone());
     }
     
     return response;
   } catch (error) {
-    // Don't serve cached auth routes
-    if (url.pathname.includes("/auth/callback") || url.pathname.includes("/sign-in")) {
+    // Don't serve cached auth routes - they must always go to network
+    if (isAuthRoute(url)) {
       throw error;
     }
     
+    // For non-auth routes, try cache
     const cachedResponse = await cache.match(request);
     if (cachedResponse) {
       return cachedResponse;
     }
     if (request.headers.get("accept")?.includes("text/html")) {
-      return cache.match("/");
+      // Don't serve cached root if this request has auth parameters
+      if (!isAuthRoute(url)) {
+        return cache.match("/");
+      }
     }
     throw error;
   }

@@ -51,7 +51,13 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
 
     if ("serviceWorker" in navigator && isSecureContext) {
       navigator.serviceWorker
-        .register("/sw.js")
+        .register("/sw.js", {
+          updateViaCache: "none", // Always check for service worker updates
+        })
+        .then((registration) => {
+          // Force immediate update check on page load
+          registration.update();
+        })
         .catch((error) => console.error("Service worker registration failed", error));
     }
 

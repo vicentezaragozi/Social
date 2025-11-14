@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 const themeColor = "#03060f";
 
 const manifest = (): MetadataRoute.Manifest => ({
-  name: "Social — Nightlife MVP",
+  name: "Social",
   short_name: "Social",
   description:
     "Connect guests, manage the floor, and keep the music flowing in one installable web app.",

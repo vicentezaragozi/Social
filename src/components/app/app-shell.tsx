@@ -70,10 +70,10 @@ export function AppShell({
             <LanguageToggle className="md:hidden px-2" />
             <Link
               href="/sign-out"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-semibold uppercase tracking-[0.3em] text-[#9db3ff] transition hover:border-white/30 hover:bg-white/10 md:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base font-semibold text-[#9db3ff] transition hover:border-white/30 hover:bg-white/10 md:hidden"
               aria-label={tAria("signOut")}
             >
-              ⎋
+              🚪
             </Link>
             <Link
               href="/sign-out"
@@ -102,10 +102,10 @@ export function AppShell({
         </div>
       </header>
 
-      <div className="flex-1 pb-[calc(96px+env(safe-area-inset-bottom,0))] md:pb-0">{children}</div>
+      <div className="flex-1 pb-[calc(72px+env(safe-area-inset-bottom,0))] md:pb-0">{children}</div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-[#0a1024]/95 px-3 pb-[calc(10px+env(safe-area-inset-bottom,0))] pt-2 shadow-[0_-18px_40px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md md:hidden">
-        <ul className="grid grid-cols-5 items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#8a96c2]">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-[#0a1024]/95 px-2 pb-[calc(8px+env(safe-area-inset-bottom,0))] pt-1.5 shadow-[0_-18px_40px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md md:hidden">
+        <ul className="grid grid-cols-5 items-center gap-1 text-[7px] font-semibold uppercase tracking-[0.15em] text-[#8a96c2]">
           {navItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -116,14 +116,14 @@ export function AppShell({
                 <Link
                   href={item.href}
                   className={cn(
-                      "flex flex-col items-center gap-1 rounded-2xl px-2 py-2 transition",
+                      "flex flex-col items-center justify-center gap-0.5 rounded-2xl px-1.5 py-1.5 transition",
                     isActive
                         ? "bg-white/12 text-white shadow-[0_18px_35px_-24px_rgba(122,75,255,0.7)]"
                       : "hover:text-white",
                   )}
                 >
-                  <span className="text-lg">{item.icon}</span>
-                    <span className="whitespace-nowrap text-[10px]">{item.label}</span>
+                  <span className="text-base leading-none">{item.icon}</span>
+                  <span className="leading-tight text-[7px]">{item.label}</span>
                 </Link>
               </li>
             );

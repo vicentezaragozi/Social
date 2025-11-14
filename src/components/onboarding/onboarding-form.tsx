@@ -133,41 +133,18 @@ export function OnboardingForm({ defaultValues }: { defaultValues: OnboardingDef
       window.localStorage.removeItem(CONNECT_COACHMARK_KEY);
       window.localStorage.removeItem(CONNECT_TOOLTIP_KEY);
       
-      // Get locale from useLocale hook (most reliable)
-      const hookLocale = locale;
+      // Reset scroll position to top before navigation to prevent false scrollbar
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       
-      // Also extract from pathname as backup
-      const currentPath = window.location.pathname;
-      const pathParts = currentPath.split('/').filter(Boolean);
-      const pathLocale = pathParts[0];
-      
-      // Determine valid locale with strict validation
-      let validLocale: string = 'en'; // Default fallback
-      
-      // Priority 1: Hook locale
-      if (hookLocale && typeof hookLocale === 'string' && ['en', 'es'].includes(hookLocale)) {
-        validLocale = hookLocale;
-      }
-      // Priority 2: Pathname locale
-      else if (pathLocale && typeof pathLocale === 'string' && ['en', 'es'].includes(pathLocale)) {
-        validLocale = pathLocale;
-      }
-      // Priority 3: Default to 'en'
-      else {
-        validLocale = 'en';
-      }
-      
-      // Final safety check - ensure it's never undefined or invalid
-      if (!validLocale || typeof validLocale !== 'string' || validLocale === 'undefined' || !['en', 'es'].includes(validLocale)) {
-        validLocale = 'en';
-      }
-      
-      // Use window.location for full page navigation
-      window.location.href = `/${validLocale}/app`;
+      // Use router.push for client-side navigation (preserves layout, avoids false scrollbar)
+      // This prevents the hard reload that causes nested scroll containers
+      router.push("/app");
     }, 100); // Small delay to ensure React has finished rendering
     
     return () => clearTimeout(redirectTimer);
-  }, [state.success, locale, clearSavedState]);
+  }, [state.success, router, clearSavedState]);
 
   const handleFileChange = (file: File | undefined) => {
     if (!file) {

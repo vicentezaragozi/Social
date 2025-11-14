@@ -205,7 +205,7 @@ export function ConnectFeed(props: ConnectFeedProps) {
       }
     });
     return map;
-  }, [matchesWithPartner, props.currentProfile.id, tWhatsApp]);
+  }, [matchesWithPartner, props.currentProfile.id]); // Removed tWhatsApp - translation functions are stable
 
   const cards = useMemo<ConnectCard[]>(() => {
     return props.attendees
@@ -329,14 +329,39 @@ export function ConnectFeed(props: ConnectFeedProps) {
     setHydrated(true);
   }, []);
 
+  // Preserve scroll position when cards change
+  const scrollPositionRef = useRef<number>(0);
+  
   useEffect(() => {
     const container = carouselRef.current;
     if (!container) return;
-    const listener = () => handleScroll();
+    
+    // Save current scroll position before any updates
+    scrollPositionRef.current = container.scrollLeft;
+    
+    const listener = () => {
+      scrollPositionRef.current = container.scrollLeft;
+      handleScroll();
+    };
+    
     container.addEventListener("scroll", listener, { passive: true });
     handleScroll();
-    return () => container.removeEventListener("scroll", listener);
-  }, [handleScroll]);
+    
+    return () => {
+      container.removeEventListener("scroll", listener);
+    };
+  }, [handleScroll, cards.length]); // Only re-setup when card count changes
+
+  // Restore scroll position after cards update
+  useEffect(() => {
+    const container = carouselRef.current;
+    if (!container || scrollPositionRef.current === 0) return;
+    
+    // Use requestAnimationFrame to ensure DOM has updated
+    requestAnimationFrame(() => {
+      container.scrollLeft = scrollPositionRef.current;
+    });
+  }, [cards.length]); // Restore when card count changes
 
   useEffect(() => {
     if (typeof window === "undefined" || !matchesWithPartner.length) return;
@@ -604,7 +629,6 @@ export function ConnectFeed(props: ConnectFeedProps) {
                   );
                 })}
           </div>
-          <CarouselDots count={cards.length} activeIndex={activeIndex} />
         </section>
       ) : (
         <EmptyState
@@ -978,23 +1002,6 @@ function CardOverlay({ card }: { card: ConnectCard }) {
       <div className="rounded-full border border-white/20 bg-black/40 px-3 py-1 text-xs uppercase tracking-[0.3em] text-white">
         {card.matched ? t("matched") : card.theyLikedYou ? t("theyLikedYou") : t("heartSent")}
       </div>
-    </div>
-  );
-}
-
-function CarouselDots({ count, activeIndex }: { count: number; activeIndex: number }) {
-  if (count <= 1) return null;
-  return (
-    <div className="flex items-center justify-center gap-2">
-      {Array.from({ length: count }).map((_, index) => (
-        <span
-          key={index}
-          className={cn(
-            "h-1.5 w-8 rounded-full bg-[#1f2b4d] transition",
-            activeIndex === index ? "bg-white" : undefined,
-          )}
-        />
-      ))}
     </div>
   );
 }
@@ -1507,11 +1514,6 @@ function SkeletonDeck() {
               </div>
             </div>
           </div>
-        ))}
-      </div>
-      <div className="flex justify-center gap-2">
-        {Array.from({ length: 2 }).map((_, index) => (
-          <span key={index} className="h-1.5 w-8 rounded-full bg-[#1f2b4d]" />
         ))}
       </div>
     </section>
